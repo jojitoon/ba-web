@@ -211,10 +211,10 @@ export default function BusinessStoryPage() {
             </Link>
           </div>
 
-          <div className='grid grid-cols-1 lg:grid-cols-2 gap-12 items-center'>
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center'>
             <div>
-              <div className='flex items-center space-x-4 mb-4'>
-                <span className='text-sm text-accent bg-accent/10 px-3 py-1 rounded-full'>
+              <div className='flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-4'>
+                <span className='text-sm text-accent bg-accent/10 px-3 py-1 rounded-full w-fit'>
                   {story.category}
                 </span>
                 <div className='flex items-center space-x-1'>
@@ -225,15 +225,15 @@ export default function BusinessStoryPage() {
                 </div>
               </div>
 
-              <h1 className='text-4xl sm:text-5xl font-bold text-foreground mb-4'>
+              <h1 className='text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4'>
                 {story.title}
               </h1>
 
-              <p className='text-xl text-foreground/70 mb-6'>
+              <p className='text-lg sm:text-xl text-foreground/70 mb-6'>
                 {story.business}
               </p>
 
-              <div className='flex items-center space-x-6 text-sm text-foreground/60 mb-8'>
+              <div className='flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-6 text-sm text-foreground/60 mb-6 sm:mb-8'>
                 <div className='flex items-center space-x-2'>
                   <MapPin className='w-4 h-4' />
                   <span>{story.location}</span>
@@ -248,30 +248,32 @@ export default function BusinessStoryPage() {
                 </div>
               </div>
 
-              <p className='text-lg text-foreground/80 mb-8 leading-relaxed'>
+              <p className='text-base sm:text-lg text-foreground/80 mb-6 sm:mb-8 leading-relaxed'>
                 {story.description}
               </p>
 
-              <div className='flex items-center space-x-4'>
-                <button className='bg-accent text-accent-foreground px-6 py-3 rounded-lg font-semibold hover:bg-accent/90 transition-colors flex items-center space-x-2'>
+              <div className='flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4'>
+                <button className='bg-accent text-accent-foreground px-6 py-3 rounded-lg font-semibold hover:bg-accent/90 transition-colors flex items-center justify-center space-x-2'>
                   <Play className='w-5 h-5' />
                   <span>Watch Documentary</span>
                 </button>
-                <button className='bg-card border border-border px-6 py-3 rounded-lg font-semibold hover:bg-secondary transition-colors flex items-center space-x-2'>
-                  <Share2 className='w-5 h-5' />
-                  <span>Share</span>
-                </button>
-                <button className='bg-card border border-border px-6 py-3 rounded-lg font-semibold hover:bg-secondary transition-colors flex items-center space-x-2'>
-                  <Heart className='w-5 h-5' />
-                  <span>Save</span>
-                </button>
+                <div className='flex space-x-3'>
+                  <button className='bg-card border border-border px-4 sm:px-6 py-3 rounded-lg font-semibold hover:bg-secondary transition-colors flex items-center justify-center space-x-2 flex-1 sm:flex-none'>
+                    <Share2 className='w-5 h-5' />
+                    <span className='hidden sm:inline'>Share</span>
+                  </button>
+                  <button className='bg-card border border-border px-4 sm:px-6 py-3 rounded-lg font-semibold hover:bg-secondary transition-colors flex items-center justify-center space-x-2 flex-1 sm:flex-none'>
+                    <Heart className='w-5 h-5' />
+                    <span className='hidden sm:inline'>Save</span>
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className='bg-card rounded-xl p-8 metallic-border'>
-              <div className='w-full h-96 bg-gradient-to-br from-accent/20 to-primary/20 rounded-lg flex items-center justify-center mb-6'>
-                <div className='w-20 h-20 bg-accent/90 rounded-full flex items-center justify-center'>
-                  <Play className='w-10 h-10 text-accent-foreground ml-1' />
+            <div className='bg-card rounded-xl p-4 sm:p-8 metallic-border'>
+              <div className='w-full h-64 sm:h-96 bg-gradient-to-br from-accent/20 to-primary/20 rounded-lg flex items-center justify-center mb-4 sm:mb-6'>
+                <div className='w-16 h-16 sm:w-20 sm:h-20 bg-accent/90 rounded-full flex items-center justify-center'>
+                  <Play className='w-8 h-8 sm:w-10 sm:h-10 text-accent-foreground ml-1' />
                 </div>
               </div>
               <div className='flex items-center justify-between text-sm text-foreground/70'>

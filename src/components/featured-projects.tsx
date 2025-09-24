@@ -44,11 +44,11 @@ export default function FeaturedProjects() {
     <section className='py-20 bg-card/50'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
         {/* Section Header */}
-        <div className='text-center mb-16'>
-          <h2 className='text-4xl sm:text-5xl font-bold text-foreground mb-6'>
+        <div className='text-center mb-12 sm:mb-16 px-4 sm:px-0'>
+          <h2 className='text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6'>
             Featured <span className='text-primary'>Construction Projects</span>
           </h2>
-          <p className='text-xl text-foreground/70 max-w-3xl mx-auto'>
+          <p className='text-lg sm:text-xl text-foreground/70 max-w-3xl mx-auto'>
             Explore our portfolio of documented construction projects, from
             groundbreaking to completion, showcasing the incredible work of
             construction teams across the nation.
@@ -56,7 +56,7 @@ export default function FeaturedProjects() {
         </div>
 
         {/* Projects Grid */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12'>
           {featuredProjects.map((project) => (
             <div
               key={project.id}
@@ -81,25 +81,29 @@ export default function FeaturedProjects() {
               </div>
 
               {/* Project Content */}
-              <div className='p-6'>
-                <div className='flex items-center space-x-2 text-sm text-foreground/60 mb-2'>
-                  <MapPin className='w-4 h-4' />
-                  <span>{project.location}</span>
-                  <Calendar className='w-4 h-4 ml-2' />
-                  <span>{project.date}</span>
+              <div className='p-4 sm:p-6'>
+                <div className='flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 text-sm text-foreground/60 mb-2'>
+                  <div className='flex items-center space-x-2'>
+                    <MapPin className='w-4 h-4' />
+                    <span>{project.location}</span>
+                  </div>
+                  <div className='flex items-center space-x-2'>
+                    <Calendar className='w-4 h-4' />
+                    <span>{project.date}</span>
+                  </div>
                 </div>
 
-                <h3 className='text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors'>
+                <h3 className='text-lg sm:text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors'>
                   {project.title}
                 </h3>
 
-                <p className='text-foreground/70 mb-4 line-clamp-3'>
+                <p className='text-sm sm:text-base text-foreground/70 mb-4 line-clamp-3'>
                   {project.description}
                 </p>
 
                 <Link
                   href={`/projects/${project.id}`}
-                  className='inline-flex items-center space-x-2 text-primary hover:text-primary/80 font-medium transition-colors'
+                  className='inline-flex items-center space-x-2 text-primary hover:text-primary/80 font-medium transition-colors text-sm sm:text-base'
                 >
                   <span>View Project Timeline</span>
                   <ArrowRight className='w-4 h-4 group-hover:translate-x-1 transition-transform' />

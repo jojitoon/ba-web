@@ -340,14 +340,14 @@ export default function ProjectPage() {
             </Link>
           </div>
 
-          <div className='grid grid-cols-1 lg:grid-cols-2 gap-12 items-center'>
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center'>
             <div>
-              <div className='flex items-center space-x-4 mb-4'>
-                <span className='text-sm text-primary bg-primary/10 px-3 py-1 rounded-full'>
+              <div className='flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-4'>
+                <span className='text-sm text-primary bg-primary/10 px-3 py-1 rounded-full w-fit'>
                   {project.category}
                 </span>
                 <span
-                  className={`text-sm px-3 py-1 rounded-full ${
+                  className={`text-sm px-3 py-1 rounded-full w-fit ${
                     project.status === 'Completed'
                       ? 'bg-primary/20 text-primary'
                       : 'bg-accent/20 text-accent'
@@ -357,11 +357,11 @@ export default function ProjectPage() {
                 </span>
               </div>
 
-              <h1 className='text-4xl sm:text-5xl font-bold text-foreground mb-4'>
+              <h1 className='text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4'>
                 {project.title}
               </h1>
 
-              <div className='flex items-center space-x-6 text-sm text-foreground/60 mb-6'>
+              <div className='flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-6 text-sm text-foreground/60 mb-6'>
                 <div className='flex items-center space-x-2'>
                   <MapPin className='w-4 h-4' />
                   <span>{project.location}</span>
@@ -376,31 +376,33 @@ export default function ProjectPage() {
                 </div>
               </div>
 
-              <p className='text-lg text-foreground/80 mb-8 leading-relaxed'>
+              <p className='text-base sm:text-lg text-foreground/80 mb-6 sm:mb-8 leading-relaxed'>
                 {project.description}
               </p>
 
-              <div className='flex items-center space-x-4'>
-                <button className='bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors flex items-center space-x-2'>
+              <div className='flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4'>
+                <button className='bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center space-x-2'>
                   <Play className='w-5 h-5' />
                   <span>View Timeline</span>
                 </button>
-                <button className='bg-card border border-border px-6 py-3 rounded-lg font-semibold hover:bg-secondary transition-colors flex items-center space-x-2'>
-                  <Share2 className='w-5 h-5' />
-                  <span>Share</span>
-                </button>
-                <button className='bg-card border border-border px-6 py-3 rounded-lg font-semibold hover:bg-secondary transition-colors flex items-center space-x-2'>
-                  <Heart className='w-5 h-5' />
-                  <span>Save</span>
-                </button>
+                <div className='flex space-x-3'>
+                  <button className='bg-card border border-border px-4 sm:px-6 py-3 rounded-lg font-semibold hover:bg-secondary transition-colors flex items-center justify-center space-x-2 flex-1 sm:flex-none'>
+                    <Share2 className='w-5 h-5' />
+                    <span className='hidden sm:inline'>Share</span>
+                  </button>
+                  <button className='bg-card border border-border px-4 sm:px-6 py-3 rounded-lg font-semibold hover:bg-secondary transition-colors flex items-center justify-center space-x-2 flex-1 sm:flex-none'>
+                    <Heart className='w-5 h-5' />
+                    <span className='hidden sm:inline'>Save</span>
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className='bg-card rounded-xl p-8 metallic-border'>
-              <div className='w-full h-96 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center mb-6'>
-                <Building2 className='w-20 h-20 text-primary/50' />
+            <div className='bg-card rounded-xl p-4 sm:p-8 metallic-border'>
+              <div className='w-full h-64 sm:h-96 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center mb-4 sm:mb-6'>
+                <Building2 className='w-16 h-16 sm:w-20 sm:h-20 text-primary/50' />
               </div>
-              <div className='grid grid-cols-2 gap-4 text-sm'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm'>
                 <div>
                   <span className='text-foreground/60'>Timeline:</span>
                   <p className='font-semibold text-foreground'>
@@ -476,7 +478,7 @@ export default function ProjectPage() {
                 Key Features
               </h3>
               <div className='space-y-4'>
-                {project.keyFeatures.map((feature, index) => (
+                {project.keyFeatures.map((feature: string, index: number) => (
                   <div key={index} className='flex items-center space-x-3'>
                     <CheckCircle className='w-5 h-5 text-primary flex-shrink-0' />
                     <span className='text-foreground/80'>{feature}</span>
@@ -488,19 +490,21 @@ export default function ProjectPage() {
                 Project Statistics
               </h3>
               <div className='grid grid-cols-2 gap-4'>
-                {project.statistics.map((stat, index) => (
-                  <div
-                    key={index}
-                    className='bg-card rounded-lg p-4 metallic-border text-center'
-                  >
-                    <div className='text-2xl font-bold text-primary mb-1'>
-                      {stat.value}
+                {project.statistics.map(
+                  (stat: { value: string; label: string }, index: number) => (
+                    <div
+                      key={index}
+                      className='bg-card rounded-lg p-4 metallic-border text-center'
+                    >
+                      <div className='text-2xl font-bold text-primary mb-1'>
+                        {stat.value}
+                      </div>
+                      <div className='text-sm text-foreground/70'>
+                        {stat.label}
+                      </div>
                     </div>
-                    <div className='text-sm text-foreground/70'>
-                      {stat.label}
-                    </div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             </div>
           </div>
@@ -514,7 +518,7 @@ export default function ProjectPage() {
             Construction Timeline
           </h2>
           <div className='space-y-8'>
-            {project.timelines.map((phase, index) => (
+            {project.timelines.map((phase: any, index: number) => (
               <div
                 key={index}
                 className='bg-card rounded-xl p-8 metallic-border'
@@ -549,7 +553,7 @@ export default function ProjectPage() {
                 </div>
 
                 <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                  {phase.images.map((image, imgIndex) => (
+                  {phase.images.map((image: string, imgIndex: number) => (
                     <div
                       key={imgIndex}
                       className='bg-background rounded-lg overflow-hidden'
@@ -573,7 +577,7 @@ export default function ProjectPage() {
             Team Interviews
           </h2>
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-            {project.teamInterviews.map((member, index) => (
+            {project.teamInterviews.map((member: any, index: number) => (
               <div
                 key={index}
                 className='bg-card rounded-xl p-6 metallic-border text-center'
@@ -606,7 +610,7 @@ export default function ProjectPage() {
           <div className='mb-12'>
             <h3 className='text-2xl font-bold text-foreground mb-6'>Photos</h3>
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-              {project.media.photos.map((photo, index) => (
+              {project.media.photos.map((photo: string, index: number) => (
                 <div
                   key={index}
                   className='bg-card rounded-lg overflow-hidden metallic-border'
@@ -623,7 +627,7 @@ export default function ProjectPage() {
           <div>
             <h3 className='text-2xl font-bold text-foreground mb-6'>Videos</h3>
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-              {project.media.videos.map((video, index) => (
+              {project.media.videos.map((video: any, index: number) => (
                 <div
                   key={index}
                   className='bg-card rounded-lg overflow-hidden metallic-border'

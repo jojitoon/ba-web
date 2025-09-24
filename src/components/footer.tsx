@@ -15,8 +15,8 @@ import {
 export default function Footer() {
   return (
     <footer className='bg-card border-t border-border'>
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8'>
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8'>
           {/* Company Info */}
           <div className='lg:col-span-1'>
             <div className='flex items-center space-x-2 mb-4'>
@@ -27,7 +27,7 @@ export default function Footer() {
                 Built Ancestry
               </span>
             </div>
-            <p className='text-foreground/70 mb-6 leading-relaxed'>
+            <p className='text-sm sm:text-base text-foreground/70 mb-6 leading-relaxed'>
               Preserving legacies in construction and business through
               innovative documentation, immersive visuals, and compelling
               storytelling.
@@ -165,12 +165,12 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className='border-t border-border mt-12 pt-8'>
-          <div className='flex flex-col md:flex-row justify-between items-center'>
-            <div className='text-foreground/60 text-sm mb-4 md:mb-0'>
+        <div className='border-t border-border mt-8 sm:mt-12 pt-6 sm:pt-8'>
+          <div className='flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0'>
+            <div className='text-foreground/60 text-sm text-center md:text-left'>
               © 2025 Built Ancestry. All rights reserved.
             </div>
-            <div className='flex space-x-6 text-sm'>
+            <div className='flex flex-wrap justify-center md:justify-end space-x-4 sm:space-x-6 text-sm'>
               <Link
                 href='/privacy'
                 className='text-foreground/60 hover:text-primary transition-colors'

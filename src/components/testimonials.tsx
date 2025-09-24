@@ -70,22 +70,22 @@ export default function Testimonials() {
     <section className='py-20 bg-card/30'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
         {/* Section Header */}
-        <div className='text-center mb-16'>
-          <h2 className='text-4xl sm:text-5xl font-bold text-foreground mb-6'>
+        <div className='text-center mb-12 sm:mb-16 px-4 sm:px-0'>
+          <h2 className='text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6'>
             What Our <span className='text-primary'>Clients Say</span>
           </h2>
-          <p className='text-xl text-foreground/70 max-w-3xl mx-auto'>
+          <p className='text-lg sm:text-xl text-foreground/70 max-w-3xl mx-auto'>
             Hear from construction professionals and business owners who have
             transformed their projects and stories with Built Ancestry.
           </p>
         </div>
 
         {/* Testimonials Grid */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8'>
           {testimonials.map((testimonial) => (
             <div
               key={testimonial.id}
-              className='bg-card rounded-xl p-6 metallic-border hover:metallic-glow transition-all duration-300 relative'
+              className='bg-card rounded-xl p-4 sm:p-6 metallic-border hover:metallic-glow transition-all duration-300 relative'
             >
               {/* Quote Icon */}
               <div className='absolute top-4 right-4'>
@@ -100,7 +100,7 @@ export default function Testimonials() {
               </div>
 
               {/* Content */}
-              <p className='text-foreground/80 mb-6 leading-relaxed'>
+              <p className='text-sm sm:text-base text-foreground/80 mb-4 sm:mb-6 leading-relaxed'>
                 "{testimonial.content}"
               </p>
 
@@ -130,22 +130,38 @@ export default function Testimonials() {
         </div>
 
         {/* Stats Section */}
-        <div className='mt-16 grid grid-cols-1 sm:grid-cols-4 gap-8 text-center'>
-          <div className='bg-card/50 rounded-lg p-6 metallic-border'>
-            <div className='text-3xl font-bold text-primary mb-2'>98%</div>
-            <div className='text-foreground/70'>Client Satisfaction</div>
+        <div className='mt-12 sm:mt-16 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 text-center'>
+          <div className='bg-card/50 rounded-lg p-4 sm:p-6 metallic-border'>
+            <div className='text-2xl sm:text-3xl font-bold text-primary mb-2'>
+              98%
+            </div>
+            <div className='text-sm sm:text-base text-foreground/70'>
+              Client Satisfaction
+            </div>
           </div>
-          <div className='bg-card/50 rounded-lg p-6 metallic-border'>
-            <div className='text-3xl font-bold text-accent mb-2'>500+</div>
-            <div className='text-foreground/70'>Projects Completed</div>
+          <div className='bg-card/50 rounded-lg p-4 sm:p-6 metallic-border'>
+            <div className='text-2xl sm:text-3xl font-bold text-accent mb-2'>
+              500+
+            </div>
+            <div className='text-sm sm:text-base text-foreground/70'>
+              Projects Completed
+            </div>
           </div>
-          <div className='bg-card/50 rounded-lg p-6 metallic-border'>
-            <div className='text-3xl font-bold text-primary mb-2'>50+</div>
-            <div className='text-foreground/70'>Cities Covered</div>
+          <div className='bg-card/50 rounded-lg p-4 sm:p-6 metallic-border'>
+            <div className='text-2xl sm:text-3xl font-bold text-primary mb-2'>
+              50+
+            </div>
+            <div className='text-sm sm:text-base text-foreground/70'>
+              Cities Covered
+            </div>
           </div>
-          <div className='bg-card/50 rounded-lg p-6 metallic-border'>
-            <div className='text-3xl font-bold text-accent mb-2'>24/7</div>
-            <div className='text-foreground/70'>Support Available</div>
+          <div className='bg-card/50 rounded-lg p-4 sm:p-6 metallic-border'>
+            <div className='text-2xl sm:text-3xl font-bold text-accent mb-2'>
+              24/7
+            </div>
+            <div className='text-sm sm:text-base text-foreground/70'>
+              Support Available
+            </div>
           </div>
         </div>
       </div>
