@@ -3,43 +3,29 @@
 import Link from 'next/link';
 import { Building2, Calendar, MapPin, ArrowRight } from 'lucide-react';
 
-const featuredProjects = [
-  {
-    id: 1,
-    title: 'Downtown Office Complex',
-    location: 'New York, NY',
-    date: '2024',
-    image: '/api/placeholder/400/300',
-    description:
-      'A 50-story mixed-use development featuring sustainable design and cutting-edge technology.',
-    timeline: '24 months',
-    team: '150+ workers',
-  },
-  {
-    id: 2,
-    title: 'Residential Tower',
-    location: 'Los Angeles, CA',
-    date: '2024',
-    image: '/api/placeholder/400/300',
-    description:
-      'Luxury residential complex with panoramic city views and premium amenities.',
-    timeline: '18 months',
-    team: '200+ workers',
-  },
-  {
-    id: 3,
-    title: 'Industrial Facility',
-    location: 'Houston, TX',
-    date: '2023',
-    image: '/api/placeholder/400/300',
-    description:
-      'State-of-the-art manufacturing facility with advanced automation systems.',
-    timeline: '36 months',
-    team: '300+ workers',
-  },
-];
+interface Project {
+  _id: string;
+  title: string;
+  location: string;
+  category: string;
+  description: string;
+  budget?: string;
+  timeline?: string;
+  team?: string;
+  media: {
+    photos: string[];
+    videos: string[];
+  };
+  createdAt: number;
+}
 
-export default function FeaturedProjects() {
+interface FeaturedProjectsProps {
+  projects: Project[];
+}
+
+export default function FeaturedProjects({ projects }: FeaturedProjectsProps) {
+  // Take only the first 3 projects for featured display
+  const featuredProjects = projects.slice(0, 3);
   return (
     <section className='py-20 bg-card/50'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
@@ -59,7 +45,7 @@ export default function FeaturedProjects() {
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12'>
           {featuredProjects.map((project) => (
             <div
-              key={project.id}
+              key={project._id}
               className='group bg-card rounded-xl overflow-hidden metallic-border hover:metallic-glow transition-all duration-300'
             >
               {/* Project Image */}
@@ -71,10 +57,10 @@ export default function FeaturedProjects() {
                 <div className='absolute bottom-4 left-4 right-4'>
                   <div className='flex items-center justify-between'>
                     <span className='text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full'>
-                      {project.timeline}
+                      {project.timeline || 'Ongoing'}
                     </span>
                     <span className='text-sm text-foreground/70'>
-                      {project.team}
+                      {project.team || 'Professional Team'}
                     </span>
                   </div>
                 </div>
@@ -89,7 +75,7 @@ export default function FeaturedProjects() {
                   </div>
                   <div className='flex items-center space-x-2'>
                     <Calendar className='w-4 h-4' />
-                    <span>{project.date}</span>
+                    <span>{new Date(project.createdAt).getFullYear()}</span>
                   </div>
                 </div>
 
@@ -102,7 +88,7 @@ export default function FeaturedProjects() {
                 </p>
 
                 <Link
-                  href={`/projects/${project.id}`}
+                  href={`/projects/${project._id}`}
                   className='inline-flex items-center space-x-2 text-primary hover:text-primary/80 font-medium transition-colors text-sm sm:text-base'
                 >
                   <span>View Project Timeline</span>

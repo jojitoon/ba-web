@@ -1,14 +1,21 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useMutation } from 'convex/react';
-import { api } from 'convex/_generated/api';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation } from 'convex/react';
+import { useParams, useRouter } from 'next/navigation';
 import MediaUpload from '@/components/media-upload';
 import MuxVideoUploader from '@/components/mux-video-uploader';
 import { ArrowLeft, Save, Eye, Plus, X } from 'lucide-react';
+import { api } from 'convex/_generated/api';
 
-export default function NewProject() {
+export default function EditProject() {
+  const params = useParams();
+  const router = useRouter();
+  const projectId = params.id as string;
+
+  const project = useQuery(api.projects.get, { id: projectId as any });
+  const updateProject = useMutation(api.projects.update);
+
   const [formData, setFormData] = useState({
     title: '',
     location: '',
@@ -32,7 +39,35 @@ export default function NewProject() {
   const [uploadedMediaIds, setUploadedMediaIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const createProject = useMutation(api.projects.create);
+  // Load project data when it's available
+  useEffect(() => {
+    if (project) {
+      setFormData({
+        title: project.title,
+        location: project.location,
+        category: project.category,
+        status: project.status,
+        budget: project.budget || '',
+        timeline: project.timeline || '',
+        team: project.team || '',
+        client: project.client || '',
+        architect: project.architect || '',
+        contractor: project.contractor || '',
+        description: project.description,
+        fullDescription: project.fullDescription || '',
+        keyFeatures:
+          project.keyFeatures.length > 0 ? project.keyFeatures : [''],
+        statistics:
+          project.statistics.length > 0
+            ? project.statistics
+            : [
+                { label: '', value: '' },
+                { label: '', value: '' },
+              ],
+      });
+      setUploadedMediaIds([...project.media.photos, ...project.media.videos]);
+    }
+  }, [project]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({
@@ -110,7 +145,8 @@ export default function NewProject() {
         (stat) => stat.label.trim() !== '' && stat.value.trim() !== ''
       );
 
-      await createProject({
+      await updateProject({
+        id: projectId as any,
         title: formData.title,
         location: formData.location,
         category: formData.category,
@@ -128,30 +164,41 @@ export default function NewProject() {
       });
 
       // Redirect to projects list
-      window.location.href = '/admin/projects';
+      router.push('/admin/projects');
     } catch (error) {
-      console.error('Failed to create project:', error);
-      alert('Failed to create project. Please try again.');
+      console.error('Failed to update project:', error);
+      alert('Failed to update project. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (!project) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div>
+          <p className='text-foreground/70'>Loading project...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='space-y-8'>
       {/* Header */}
       <div className='flex items-center justify-between'>
         <div className='flex items-center space-x-4'>
-          <Link
-            href='/admin/projects'
+          <button
+            onClick={() => router.back()}
             className='p-2 rounded-lg hover:bg-secondary transition-colors'
           >
             <ArrowLeft className='w-5 h-5 text-foreground' />
-          </Link>
+          </button>
           <div>
-            <h1 className='text-3xl font-bold text-foreground'>New Project</h1>
-            <p className='text-foreground/70 mt-1'>
-              Create a new construction project documentation.
+            <h1 className='text-4xl font-bold text-foreground'>Edit Project</h1>
+            <p className='text-foreground/70'>
+              Update the project information and content.
             </p>
           </div>
         </div>
@@ -166,7 +213,7 @@ export default function NewProject() {
             className='bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed'
           >
             <Save className='w-5 h-5' />
-            <span>{isSubmitting ? 'Saving...' : 'Save Project'}</span>
+            <span>{isSubmitting ? 'Saving...' : 'Save Changes'}</span>
           </button>
         </div>
       </div>
@@ -179,57 +226,66 @@ export default function NewProject() {
           </h2>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
-                Project Title *
+              <label
+                htmlFor='title'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
+                Project Title
               </label>
               <input
                 type='text'
-                required
+                id='title'
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
-                placeholder='Enter project title'
+                required
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
-                Location *
+              <label
+                htmlFor='location'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
+                Location
               </label>
               <input
                 type='text'
-                required
+                id='location'
                 value={formData.location}
                 onChange={(e) => handleInputChange('location', e.target.value)}
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
-                placeholder='City, State'
+                required
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
-                Category *
+              <label
+                htmlFor='category'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
+                Category
               </label>
-              <select
-                required
+              <input
+                type='text'
+                id='category'
                 value={formData.category}
                 onChange={(e) => handleInputChange('category', e.target.value)}
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
-              >
-                <option value=''>Select category</option>
-                <option value='Commercial'>Commercial</option>
-                <option value='Residential'>Residential</option>
-                <option value='Industrial'>Industrial</option>
-                <option value='Healthcare'>Healthcare</option>
-                <option value='Education'>Education</option>
-                <option value='Retail'>Retail</option>
-              </select>
+                required
+              />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
+              <label
+                htmlFor='status'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
                 Status
               </label>
               <select
+                id='status'
                 value={formData.status}
-                onChange={(e) => handleInputChange('status', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange('status', e.target.value as any)
+                }
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
               >
                 <option value='Draft'>Draft</option>
@@ -247,23 +303,31 @@ export default function NewProject() {
           </h2>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
+              <label
+                htmlFor='budget'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
                 Budget
               </label>
               <input
                 type='text'
+                id='budget'
                 value={formData.budget}
                 onChange={(e) => handleInputChange('budget', e.target.value)}
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
-                placeholder='e.g., $850M'
+                placeholder='e.g., $50M'
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
+              <label
+                htmlFor='timeline'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
                 Timeline
               </label>
               <input
                 type='text'
+                id='timeline'
                 value={formData.timeline}
                 onChange={(e) => handleInputChange('timeline', e.target.value)}
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
@@ -271,23 +335,31 @@ export default function NewProject() {
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
+              <label
+                htmlFor='team'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
                 Team Size
               </label>
               <input
                 type='text'
+                id='team'
                 value={formData.team}
                 onChange={(e) => handleInputChange('team', e.target.value)}
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
-                placeholder='e.g., 150+ workers'
+                placeholder='e.g., 50+ professionals'
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
+              <label
+                htmlFor='client'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
                 Client
               </label>
               <input
                 type='text'
+                id='client'
                 value={formData.client}
                 onChange={(e) => handleInputChange('client', e.target.value)}
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
@@ -295,11 +367,15 @@ export default function NewProject() {
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
+              <label
+                htmlFor='architect'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
                 Architect
               </label>
               <input
                 type='text'
+                id='architect'
                 value={formData.architect}
                 onChange={(e) => handleInputChange('architect', e.target.value)}
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
@@ -307,11 +383,15 @@ export default function NewProject() {
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
+              <label
+                htmlFor='contractor'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
                 Contractor
               </label>
               <input
                 type='text'
+                id='contractor'
                 value={formData.contractor}
                 onChange={(e) =>
                   handleInputChange('contractor', e.target.value)
@@ -330,11 +410,14 @@ export default function NewProject() {
           </h2>
           <div className='space-y-6'>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
-                Short Description *
+              <label
+                htmlFor='description'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
+                Short Description
               </label>
               <textarea
-                required
+                id='description'
                 rows={3}
                 value={formData.description}
                 onChange={(e) =>
@@ -342,13 +425,18 @@ export default function NewProject() {
                 }
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
                 placeholder='Brief project description'
+                required
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
+              <label
+                htmlFor='fullDescription'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
                 Full Description
               </label>
               <textarea
+                id='fullDescription'
                 rows={6}
                 value={formData.fullDescription}
                 onChange={(e) =>
@@ -376,7 +464,7 @@ export default function NewProject() {
           </div>
           <div className='space-y-4'>
             {formData.keyFeatures.map((feature, index) => (
-              <div key={index} className='flex items-center space-x-3'>
+              <div key={index} className='flex items-center space-x-2'>
                 <input
                   type='text'
                   value={feature}
@@ -389,7 +477,7 @@ export default function NewProject() {
                 <button
                   type='button'
                   onClick={() => removeKeyFeature(index)}
-                  className='p-3 rounded-lg hover:bg-secondary transition-colors'
+                  className='p-2 rounded-lg hover:bg-secondary transition-colors'
                 >
                   <X className='w-4 h-4 text-foreground/60' />
                 </button>
@@ -398,7 +486,7 @@ export default function NewProject() {
           </div>
         </div>
 
-        {/* Statistics */}
+        {/* Project Statistics */}
         <div className='bg-card rounded-xl p-6 metallic-border'>
           <div className='flex items-center justify-between mb-6'>
             <h2 className='text-xl font-bold text-foreground'>
@@ -428,7 +516,7 @@ export default function NewProject() {
                   className='px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
                   placeholder='Statistic label'
                 />
-                <div className='flex items-center space-x-3'>
+                <div className='flex items-center space-x-2'>
                   <input
                     type='text'
                     value={stat.value}
@@ -441,7 +529,7 @@ export default function NewProject() {
                   <button
                     type='button'
                     onClick={() => removeStatistic(index)}
-                    className='p-3 rounded-lg hover:bg-secondary transition-colors'
+                    className='p-2 rounded-lg hover:bg-secondary transition-colors'
                   >
                     <X className='w-4 h-4 text-foreground/60' />
                   </button>

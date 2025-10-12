@@ -4,6 +4,8 @@ import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useQuery } from 'convex/react';
+import { api } from 'convex/_generated/api';
 import {
   Building2,
   Calendar,
@@ -17,287 +19,24 @@ import {
   CheckCircle,
 } from 'lucide-react';
 
-// Mock data - in a real app, this would come from an API
-const projects: Record<string, any> = {
-  1: {
-    id: 1,
-    title: 'Downtown Office Complex',
-    location: 'New York, NY',
-    date: '2024',
-    timeline: '24 months',
-    team: '150+ workers',
-    category: 'Commercial',
-    status: 'Completed',
-    description:
-      'A 50-story mixed-use development featuring sustainable design and cutting-edge technology.',
-    fullDescription: `The Downtown Office Complex represents a new era of sustainable urban development in the heart of New York City. This 50-story mixed-use development combines cutting-edge technology with environmentally conscious design, creating a landmark that will serve the community for generations to come.
-
-The project features state-of-the-art office spaces, retail areas, and public amenities, all designed with LEED Platinum certification in mind. The building incorporates advanced energy systems, green roofs, and innovative water management solutions that set new standards for urban sustainability.
-
-Throughout the construction process, our team documented every phase of development, from the initial groundbreaking ceremony to the final handshake. The project timeline showcases the incredible work of over 150 skilled professionals who brought this vision to life.`,
-    client: 'Metro Development Group',
-    architect: 'Foster + Partners',
-    contractor: 'Turner Construction',
-    budget: '$850M',
-    squareFootage: '2.5M sq ft',
-    floors: '50',
-    startDate: 'January 2022',
-    completionDate: 'December 2023',
-    timelines: [
-      {
-        phase: 'Planning & Design',
-        startDate: '2021',
-        endDate: '2022',
-        description:
-          'Architectural design, engineering, and permit acquisition',
-        status: 'completed',
-        images: ['/api/placeholder/400/300', '/api/placeholder/400/300'],
-      },
-      {
-        phase: 'Foundation & Structure',
-        startDate: 'January 2022',
-        endDate: 'August 2022',
-        description:
-          'Excavation, foundation work, and steel frame construction',
-        status: 'completed',
-        images: [
-          '/api/placeholder/400/300',
-          '/api/placeholder/400/300',
-          '/api/placeholder/400/300',
-        ],
-      },
-      {
-        phase: 'Enclosure & MEP',
-        startDate: 'September 2022',
-        endDate: 'June 2023',
-        description:
-          'Exterior facade, mechanical, electrical, and plumbing systems',
-        status: 'completed',
-        images: ['/api/placeholder/400/300', '/api/placeholder/400/300'],
-      },
-      {
-        phase: 'Interior & Finishing',
-        startDate: 'July 2023',
-        endDate: 'November 2023',
-        description: 'Interior construction, finishes, and tenant improvements',
-        status: 'completed',
-        images: [
-          '/api/placeholder/400/300',
-          '/api/placeholder/400/300',
-          '/api/placeholder/400/300',
-        ],
-      },
-      {
-        phase: 'Final Inspections',
-        startDate: 'December 2023',
-        endDate: 'December 2023',
-        description: 'Final inspections, testing, and project handover',
-        status: 'completed',
-        images: ['/api/placeholder/400/300'],
-      },
-    ],
-    teamInterviews: [
-      {
-        name: 'Sarah Johnson',
-        role: 'Project Manager',
-        company: 'Turner Construction',
-        quote:
-          'This project challenged us to push the boundaries of sustainable construction while maintaining the highest quality standards.',
-        image: '/api/placeholder/200/200',
-      },
-      {
-        name: 'Michael Chen',
-        role: 'Lead Architect',
-        company: 'Foster + Partners',
-        quote:
-          'The Downtown Office Complex represents our vision for the future of urban development - sustainable, beautiful, and functional.',
-        image: '/api/placeholder/200/200',
-      },
-      {
-        name: 'David Rodriguez',
-        role: 'Site Supervisor',
-        company: 'Turner Construction',
-        quote:
-          'Working with such a talented team on this landmark project has been the highlight of my career.',
-        image: '/api/placeholder/200/200',
-      },
-    ],
-    keyFeatures: [
-      'LEED Platinum Certification',
-      'Advanced Energy Management System',
-      'Green Roof and Rainwater Collection',
-      'Smart Building Technology',
-      'Public Art Integration',
-      'Accessible Design Throughout',
-    ],
-    statistics: [
-      { label: 'Total Budget', value: '$850M' },
-      { label: 'Square Footage', value: '2.5M sq ft' },
-      { label: 'Floors', value: '50' },
-      { label: 'Construction Time', value: '24 months' },
-      { label: 'Workers Employed', value: '150+' },
-      { label: 'LEED Points', value: '95' },
-    ],
-    media: {
-      photos: [
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-      ],
-      videos: [
-        {
-          title: 'Construction Time-lapse',
-          duration: '3:45',
-          thumbnail: '/api/placeholder/400/300',
-        },
-        {
-          title: 'Drone Aerial Tour',
-          duration: '2:30',
-          thumbnail: '/api/placeholder/400/300',
-        },
-        {
-          title: 'Team Interviews',
-          duration: '8:15',
-          thumbnail: '/api/placeholder/400/300',
-        },
-      ],
-    },
-  },
-  2: {
-    id: 2,
-    title: 'Residential Tower',
-    location: 'Los Angeles, CA',
-    date: '2024',
-    timeline: '18 months',
-    team: '200+ workers',
-    category: 'Residential',
-    status: 'Completed',
-    description:
-      'Luxury residential complex with panoramic city views and premium amenities.',
-    fullDescription: `The Residential Tower in Los Angeles represents the pinnacle of luxury living in the heart of the city. This stunning 35-story residential complex offers panoramic views of the Los Angeles skyline and the Pacific Ocean, combined with world-class amenities and sustainable design.
-
-The project features 200 luxury condominiums, each designed with modern finishes and smart home technology. Residents enjoy access to a rooftop pool, fitness center, concierge services, and private parking. The building's design emphasizes natural light and outdoor living spaces, creating a seamless connection between indoor and outdoor environments.
-
-The construction timeline showcases the precision and expertise required to build such a complex structure in a dense urban environment, with careful attention to minimizing disruption to the surrounding community.`,
-    client: 'Luxury Living Developments',
-    architect: 'Gensler',
-    contractor: 'PCL Construction',
-    budget: '$450M',
-    squareFootage: '1.8M sq ft',
-    floors: '35',
-    startDate: 'March 2022',
-    completionDate: 'September 2023',
-    timelines: [
-      {
-        phase: 'Site Preparation',
-        startDate: 'March 2022',
-        endDate: 'May 2022',
-        description: 'Demolition, site clearing, and foundation preparation',
-        status: 'completed',
-        images: ['/api/placeholder/400/300', '/api/placeholder/400/300'],
-      },
-      {
-        phase: 'Foundation & Core',
-        startDate: 'June 2022',
-        endDate: 'October 2022',
-        description: 'Foundation construction and building core erection',
-        status: 'completed',
-        images: ['/api/placeholder/400/300', '/api/placeholder/400/300'],
-      },
-      {
-        phase: 'Superstructure',
-        startDate: 'November 2022',
-        endDate: 'April 2023',
-        description: 'Steel frame construction and floor slab installation',
-        status: 'completed',
-        images: [
-          '/api/placeholder/400/300',
-          '/api/placeholder/400/300',
-          '/api/placeholder/400/300',
-        ],
-      },
-      {
-        phase: 'Enclosure & Finishes',
-        startDate: 'May 2023',
-        endDate: 'August 2023',
-        description: 'Exterior facade, interior finishes, and amenity spaces',
-        status: 'completed',
-        images: ['/api/placeholder/400/300', '/api/placeholder/400/300'],
-      },
-      {
-        phase: 'Final Completion',
-        startDate: 'September 2023',
-        endDate: 'September 2023',
-        description: 'Final inspections, testing, and resident move-ins',
-        status: 'completed',
-        images: ['/api/placeholder/400/300'],
-      },
-    ],
-    teamInterviews: [
-      {
-        name: 'Jennifer Lee',
-        role: 'Project Director',
-        company: 'PCL Construction',
-        quote:
-          'This residential tower sets a new standard for luxury living in Los Angeles, combining stunning design with exceptional quality.',
-        image: '/api/placeholder/200/200',
-      },
-      {
-        name: 'Robert Kim',
-        role: 'Design Principal',
-        company: 'Gensler',
-        quote:
-          'We wanted to create a building that would become an iconic part of the Los Angeles skyline while providing residents with an unparalleled living experience.',
-        image: '/api/placeholder/200/200',
-      },
-    ],
-    keyFeatures: [
-      'Panoramic City and Ocean Views',
-      'Rooftop Pool and Lounge',
-      'Smart Home Technology',
-      'Private Parking Garage',
-      'Concierge Services',
-      'Fitness Center and Spa',
-    ],
-    statistics: [
-      { label: 'Total Budget', value: '$450M' },
-      { label: 'Square Footage', value: '1.8M sq ft' },
-      { label: 'Floors', value: '35' },
-      { label: 'Construction Time', value: '18 months' },
-      { label: 'Workers Employed', value: '200+' },
-      { label: 'Residential Units', value: '200' },
-    ],
-    media: {
-      photos: [
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-        '/api/placeholder/800/600',
-      ],
-      videos: [
-        {
-          title: 'Construction Progress',
-          duration: '4:20',
-          thumbnail: '/api/placeholder/400/300',
-        },
-        {
-          title: 'Aerial Drone Footage',
-          duration: '3:15',
-          thumbnail: '/api/placeholder/400/300',
-        },
-      ],
-    },
-  },
-};
-
 export default function ProjectPage() {
   const params = useParams();
   const projectId = params.id as string;
-  const project = projects[projectId];
+
+  const project = useQuery(api.projects.get, { id: projectId as any });
+
+  if (project === undefined) {
+    return (
+      <div className='min-h-screen bg-background'>
+        <Navigation />
+        <div className='pt-20 pb-16 text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div>
+          <p className='text-foreground/70'>Loading project...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!project) {
     return (
@@ -348,7 +87,7 @@ export default function ProjectPage() {
                 </span>
                 <span
                   className={`text-sm px-3 py-1 rounded-full w-fit ${
-                    project.status === 'Completed'
+                    project.status === 'Published'
                       ? 'bg-primary/20 text-primary'
                       : 'bg-accent/20 text-accent'
                   }`}
@@ -368,11 +107,11 @@ export default function ProjectPage() {
                 </div>
                 <div className='flex items-center space-x-2'>
                   <Calendar className='w-4 h-4' />
-                  <span>{project.date}</span>
+                  <span>{new Date(project.createdAt).getFullYear()}</span>
                 </div>
                 <div className='flex items-center space-x-2'>
                   <Users className='w-4 h-4' />
-                  <span>{project.team}</span>
+                  <span>{project.team || 'Professional Team'}</span>
                 </div>
               </div>
 
@@ -406,25 +145,25 @@ export default function ProjectPage() {
                 <div>
                   <span className='text-foreground/60'>Timeline:</span>
                   <p className='font-semibold text-foreground'>
-                    {project.timeline}
+                    {project.timeline || 'Ongoing'}
                   </p>
                 </div>
                 <div>
                   <span className='text-foreground/60'>Budget:</span>
                   <p className='font-semibold text-foreground'>
-                    {project.budget}
+                    {project.budget || 'N/A'}
                   </p>
                 </div>
                 <div>
-                  <span className='text-foreground/60'>Square Footage:</span>
+                  <span className='text-foreground/60'>Client:</span>
                   <p className='font-semibold text-foreground'>
-                    {project.squareFootage}
+                    {project.client || 'N/A'}
                   </p>
                 </div>
                 <div>
-                  <span className='text-foreground/60'>Floors:</span>
+                  <span className='text-foreground/60'>Architect:</span>
                   <p className='font-semibold text-foreground'>
-                    {project.floors}
+                    {project.architect || 'N/A'}
                   </p>
                 </div>
               </div>
@@ -442,32 +181,38 @@ export default function ProjectPage() {
                 Project Overview
               </h2>
               <p className='text-lg text-foreground/80 leading-relaxed mb-8'>
-                {project.fullDescription}
+                {project.fullDescription || project.description}
               </p>
 
               <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                 <div className='bg-card rounded-lg p-6 metallic-border'>
                   <h3 className='font-semibold text-foreground mb-2'>Client</h3>
-                  <p className='text-foreground/70'>{project.client}</p>
+                  <p className='text-foreground/70'>
+                    {project.client || 'N/A'}
+                  </p>
                 </div>
                 <div className='bg-card rounded-lg p-6 metallic-border'>
                   <h3 className='font-semibold text-foreground mb-2'>
                     Architect
                   </h3>
-                  <p className='text-foreground/70'>{project.architect}</p>
+                  <p className='text-foreground/70'>
+                    {project.architect || 'N/A'}
+                  </p>
                 </div>
                 <div className='bg-card rounded-lg p-6 metallic-border'>
                   <h3 className='font-semibold text-foreground mb-2'>
                     Contractor
                   </h3>
-                  <p className='text-foreground/70'>{project.contractor}</p>
+                  <p className='text-foreground/70'>
+                    {project.contractor || 'N/A'}
+                  </p>
                 </div>
                 <div className='bg-card rounded-lg p-6 metallic-border'>
                   <h3 className='font-semibold text-foreground mb-2'>
-                    Duration
+                    Timeline
                   </h3>
                   <p className='text-foreground/70'>
-                    {project.startDate} - {project.completionDate}
+                    {project.timeline || 'Ongoing'}
                   </p>
                 </div>
               </div>
@@ -478,32 +223,46 @@ export default function ProjectPage() {
                 Key Features
               </h3>
               <div className='space-y-4'>
-                {project.keyFeatures.map((feature: string, index: number) => (
-                  <div key={index} className='flex items-center space-x-3'>
-                    <CheckCircle className='w-5 h-5 text-primary flex-shrink-0' />
-                    <span className='text-foreground/80'>{feature}</span>
-                  </div>
-                ))}
+                {project.keyFeatures && project.keyFeatures.length > 0 ? (
+                  project.keyFeatures.map((feature: string, index: number) => (
+                    <div key={index} className='flex items-center space-x-3'>
+                      <CheckCircle className='w-5 h-5 text-primary flex-shrink-0' />
+                      <span className='text-foreground/80'>{feature}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className='text-foreground/60 italic'>
+                    No key features listed
+                  </p>
+                )}
               </div>
 
               <h3 className='text-2xl font-bold text-foreground mb-6 mt-8'>
                 Project Statistics
               </h3>
               <div className='grid grid-cols-2 gap-4'>
-                {project.statistics.map(
-                  (stat: { value: string; label: string }, index: number) => (
-                    <div
-                      key={index}
-                      className='bg-card rounded-lg p-4 metallic-border text-center'
-                    >
-                      <div className='text-2xl font-bold text-primary mb-1'>
-                        {stat.value}
+                {project.statistics && project.statistics.length > 0 ? (
+                  project.statistics.map(
+                    (stat: { value: string; label: string }, index: number) => (
+                      <div
+                        key={index}
+                        className='bg-card rounded-lg p-4 metallic-border text-center'
+                      >
+                        <div className='text-2xl font-bold text-primary mb-1'>
+                          {stat.value}
+                        </div>
+                        <div className='text-sm text-foreground/70'>
+                          {stat.label}
+                        </div>
                       </div>
-                      <div className='text-sm text-foreground/70'>
-                        {stat.label}
-                      </div>
-                    </div>
+                    )
                   )
+                ) : (
+                  <div className='col-span-2 text-center py-8'>
+                    <p className='text-foreground/60 italic'>
+                      No statistics available
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
@@ -518,54 +277,70 @@ export default function ProjectPage() {
             Construction Timeline
           </h2>
           <div className='space-y-8'>
-            {project.timelines.map((phase: any, index: number) => (
-              <div
-                key={index}
-                className='bg-card rounded-xl p-8 metallic-border'
-              >
-                <div className='flex items-start justify-between mb-6'>
-                  <div>
-                    <h3 className='text-2xl font-bold text-foreground mb-2'>
-                      {phase.phase}
-                    </h3>
-                    <p className='text-foreground/70 mb-2'>
-                      {phase.description}
-                    </p>
-                    <div className='flex items-center space-x-4 text-sm text-foreground/60'>
-                      <div className='flex items-center space-x-2'>
-                        <Calendar className='w-4 h-4' />
-                        <span>
-                          {phase.startDate} - {phase.endDate}
-                        </span>
-                      </div>
-                      <div className='flex items-center space-x-2'>
-                        <CheckCircle className='w-4 h-4 text-primary' />
-                        <span className='text-primary'>Completed</span>
+            {project.timelines && project.timelines.length > 0 ? (
+              project.timelines.map((phase: any, index: number) => (
+                <div
+                  key={index}
+                  className='bg-card rounded-xl p-8 metallic-border'
+                >
+                  <div className='flex items-start justify-between mb-6'>
+                    <div>
+                      <h3 className='text-2xl font-bold text-foreground mb-2'>
+                        {phase.phase}
+                      </h3>
+                      <p className='text-foreground/70 mb-2'>
+                        {phase.description}
+                      </p>
+                      <div className='flex items-center space-x-4 text-sm text-foreground/60'>
+                        <div className='flex items-center space-x-2'>
+                          <Calendar className='w-4 h-4' />
+                          <span>
+                            {phase.startDate} - {phase.endDate}
+                          </span>
+                        </div>
+                        <div className='flex items-center space-x-2'>
+                          <CheckCircle className='w-4 h-4 text-primary' />
+                          <span className='text-primary'>Completed</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className='text-right'>
-                    <div className='text-3xl font-bold text-primary mb-1'>
-                      {index + 1}
+                    <div className='text-right'>
+                      <div className='text-3xl font-bold text-primary mb-1'>
+                        {index + 1}
+                      </div>
+                      <div className='text-sm text-foreground/60'>Phase</div>
                     </div>
-                    <div className='text-sm text-foreground/60'>Phase</div>
                   </div>
-                </div>
 
-                <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                  {phase.images.map((image: string, imgIndex: number) => (
-                    <div
-                      key={imgIndex}
-                      className='bg-background rounded-lg overflow-hidden'
-                    >
-                      <div className='w-full h-32 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center'>
-                        <Camera className='w-8 h-8 text-primary/50' />
+                  <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                    {phase.images && phase.images.length > 0 ? (
+                      phase.images.map((image: string, imgIndex: number) => (
+                        <div
+                          key={imgIndex}
+                          className='bg-background rounded-lg overflow-hidden'
+                        >
+                          <div className='w-full h-32 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center'>
+                            <Camera className='w-8 h-8 text-primary/50' />
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className='col-span-3 text-center py-8'>
+                        <p className='text-foreground/60 italic'>
+                          No images available for this phase
+                        </p>
                       </div>
-                    </div>
-                  ))}
+                    )}
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className='text-center py-16'>
+                <p className='text-foreground/60 italic'>
+                  No timeline information available
+                </p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -577,24 +352,32 @@ export default function ProjectPage() {
             Team Interviews
           </h2>
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-            {project.teamInterviews.map((member: any, index: number) => (
-              <div
-                key={index}
-                className='bg-card rounded-xl p-6 metallic-border text-center'
-              >
-                <div className='w-20 h-20 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center mx-auto mb-4'>
-                  <Users className='w-10 h-10 text-primary/50' />
+            {project.teamInterviews && project.teamInterviews.length > 0 ? (
+              project.teamInterviews.map((member: any, index: number) => (
+                <div
+                  key={index}
+                  className='bg-card rounded-xl p-6 metallic-border text-center'
+                >
+                  <div className='w-20 h-20 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center mx-auto mb-4'>
+                    <Users className='w-10 h-10 text-primary/50' />
+                  </div>
+                  <h3 className='text-xl font-bold text-foreground mb-2'>
+                    {member.name}
+                  </h3>
+                  <p className='text-primary mb-2'>{member.role}</p>
+                  <p className='text-sm text-foreground/60 mb-4'>
+                    {member.company}
+                  </p>
+                  <p className='text-foreground/80 italic'>"{member.quote}"</p>
                 </div>
-                <h3 className='text-xl font-bold text-foreground mb-2'>
-                  {member.name}
-                </h3>
-                <p className='text-primary mb-2'>{member.role}</p>
-                <p className='text-sm text-foreground/60 mb-4'>
-                  {member.company}
+              ))
+            ) : (
+              <div className='col-span-full text-center py-16'>
+                <p className='text-foreground/60 italic'>
+                  No team interviews available
                 </p>
-                <p className='text-foreground/80 italic'>"{member.quote}"</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -610,16 +393,24 @@ export default function ProjectPage() {
           <div className='mb-12'>
             <h3 className='text-2xl font-bold text-foreground mb-6'>Photos</h3>
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-              {project.media.photos.map((photo: string, index: number) => (
-                <div
-                  key={index}
-                  className='bg-card rounded-lg overflow-hidden metallic-border'
-                >
-                  <div className='w-full h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center'>
-                    <Camera className='w-12 h-12 text-primary/50' />
+              {project.media.photos && project.media.photos.length > 0 ? (
+                project.media.photos.map((photo: string, index: number) => (
+                  <div
+                    key={index}
+                    className='bg-card rounded-lg overflow-hidden metallic-border'
+                  >
+                    <div className='w-full h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center'>
+                      <Camera className='w-12 h-12 text-primary/50' />
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className='col-span-full text-center py-16'>
+                  <p className='text-foreground/60 italic'>
+                    No photos available
+                  </p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -627,26 +418,31 @@ export default function ProjectPage() {
           <div>
             <h3 className='text-2xl font-bold text-foreground mb-6'>Videos</h3>
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-              {project.media.videos.map((video: any, index: number) => (
-                <div
-                  key={index}
-                  className='bg-card rounded-lg overflow-hidden metallic-border'
-                >
-                  <div className='w-full h-48 bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center relative'>
-                    <div className='w-16 h-16 bg-accent/90 rounded-full flex items-center justify-center'>
-                      <Play className='w-8 h-8 text-accent-foreground ml-1' />
+              {project.media.videos && project.media.videos.length > 0 ? (
+                project.media.videos.map((video: string, index: number) => (
+                  <div
+                    key={index}
+                    className='bg-card rounded-lg overflow-hidden metallic-border'
+                  >
+                    <div className='w-full h-48 bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center relative'>
+                      <div className='w-16 h-16 bg-accent/90 rounded-full flex items-center justify-center'>
+                        <Play className='w-8 h-8 text-accent-foreground ml-1' />
+                      </div>
                     </div>
-                    <div className='absolute bottom-2 right-2 bg-background/80 px-2 py-1 rounded text-xs text-foreground'>
-                      {video.duration}
+                    <div className='p-4'>
+                      <h4 className='font-semibold text-foreground'>
+                        Video {index + 1}
+                      </h4>
                     </div>
                   </div>
-                  <div className='p-4'>
-                    <h4 className='font-semibold text-foreground'>
-                      {video.title}
-                    </h4>
-                  </div>
+                ))
+              ) : (
+                <div className='col-span-full text-center py-16'>
+                  <p className='text-foreground/60 italic'>
+                    No videos available
+                  </p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>

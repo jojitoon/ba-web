@@ -3,6 +3,8 @@
 import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
 import Link from 'next/link';
+import { useQuery } from 'convex/react';
+import { api } from 'convex/_generated/api';
 import {
   Building2,
   Calendar,
@@ -12,87 +14,6 @@ import {
   Search,
 } from 'lucide-react';
 import { useState } from 'react';
-
-const allProjects = [
-  {
-    id: 1,
-    title: 'Downtown Office Complex',
-    location: 'New York, NY',
-    date: '2024',
-    image: '/api/placeholder/400/300',
-    description:
-      'A 50-story mixed-use development featuring sustainable design and cutting-edge technology.',
-    timeline: '24 months',
-    team: '150+ workers',
-    category: 'Commercial',
-    status: 'Completed',
-  },
-  {
-    id: 2,
-    title: 'Residential Tower',
-    location: 'Los Angeles, CA',
-    date: '2024',
-    image: '/api/placeholder/400/300',
-    description:
-      'Luxury residential complex with panoramic city views and premium amenities.',
-    timeline: '18 months',
-    team: '200+ workers',
-    category: 'Residential',
-    status: 'Completed',
-  },
-  {
-    id: 3,
-    title: 'Industrial Facility',
-    location: 'Houston, TX',
-    date: '2023',
-    image: '/api/placeholder/400/300',
-    description:
-      'State-of-the-art manufacturing facility with advanced automation systems.',
-    timeline: '36 months',
-    team: '300+ workers',
-    category: 'Industrial',
-    status: 'Completed',
-  },
-  {
-    id: 4,
-    title: 'Hospital Expansion',
-    location: 'Chicago, IL',
-    date: '2024',
-    image: '/api/placeholder/400/300',
-    description:
-      'Modern healthcare facility expansion with advanced medical technology.',
-    timeline: '30 months',
-    team: '250+ workers',
-    category: 'Healthcare',
-    status: 'In Progress',
-  },
-  {
-    id: 5,
-    title: 'University Campus',
-    location: 'Boston, MA',
-    date: '2023',
-    image: '/api/placeholder/400/300',
-    description:
-      'New academic buildings and student housing for growing university.',
-    timeline: '42 months',
-    team: '400+ workers',
-    category: 'Education',
-    status: 'Completed',
-  },
-  {
-    id: 6,
-    title: 'Retail Complex',
-    location: 'Miami, FL',
-    date: '2024',
-    image: '/api/placeholder/400/300',
-    description:
-      'Mixed-use retail and entertainment complex with modern design.',
-    timeline: '20 months',
-    team: '180+ workers',
-    category: 'Retail',
-    status: 'In Progress',
-  },
-];
 
 const categories = [
   'All',
@@ -108,14 +29,30 @@ export default function ProjectsPage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredProjects = allProjects.filter((project) => {
-    const matchesCategory =
-      selectedCategory === 'All' || project.category === selectedCategory;
-    const matchesSearch =
-      project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.location.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const projects = useQuery(api.projects.list, { status: 'Published' });
+
+  const filteredProjects =
+    projects?.filter((project) => {
+      const matchesCategory =
+        selectedCategory === 'All' || project.category === selectedCategory;
+      const matchesSearch =
+        project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.location.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesCategory && matchesSearch;
+    }) || [];
+
+  if (projects === undefined) {
+    return (
+      <div className='min-h-screen bg-background'>
+        <Navigation />
+        <div className='pt-20 pb-16 text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div>
+          <p className='text-foreground/70'>Loading projects...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen bg-background'>
@@ -168,24 +105,30 @@ export default function ProjectsPage() {
           <div className='grid grid-cols-1 sm:grid-cols-4 gap-6 text-center'>
             <div className='bg-card/50 rounded-lg p-4 metallic-border'>
               <div className='text-2xl font-bold text-primary mb-1'>
-                {allProjects.length}
+                {projects?.length || 0}
               </div>
               <div className='text-foreground/70 text-sm'>Total Projects</div>
             </div>
             <div className='bg-card/50 rounded-lg p-4 metallic-border'>
               <div className='text-2xl font-bold text-accent mb-1'>
-                {allProjects.filter((p) => p.status === 'Completed').length}
+                {projects?.filter((p) => p.status === 'Published').length || 0}
               </div>
-              <div className='text-foreground/70 text-sm'>Completed</div>
+              <div className='text-foreground/70 text-sm'>Published</div>
             </div>
             <div className='bg-card/50 rounded-lg p-4 metallic-border'>
               <div className='text-2xl font-bold text-primary mb-1'>
-                {allProjects.filter((p) => p.status === 'In Progress').length}
+                {projects?.filter((p) => p.status === 'In Review').length || 0}
               </div>
-              <div className='text-foreground/70 text-sm'>In Progress</div>
+              <div className='text-foreground/70 text-sm'>In Review</div>
             </div>
             <div className='bg-card/50 rounded-lg p-4 metallic-border'>
-              <div className='text-2xl font-bold text-accent mb-1'>50+</div>
+              <div className='text-2xl font-bold text-accent mb-1'>
+                {
+                  new Set(
+                    projects?.map((p) => p.location.split(',')[1]?.trim()) || []
+                  ).size
+                }
+              </div>
               <div className='text-foreground/70 text-sm'>Cities</div>
             </div>
           </div>
@@ -198,7 +141,7 @@ export default function ProjectsPage() {
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
             {filteredProjects.map((project) => (
               <div
-                key={project.id}
+                key={project._id}
                 className='group bg-card rounded-xl overflow-hidden metallic-border hover:metallic-glow transition-all duration-300'
               >
                 {/* Project Image */}
@@ -212,7 +155,7 @@ export default function ProjectsPage() {
                   <div className='absolute top-4 right-4'>
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        project.status === 'Completed'
+                        project.status === 'Published'
                           ? 'bg-primary/20 text-primary'
                           : 'bg-accent/20 text-accent'
                       }`}
@@ -225,10 +168,10 @@ export default function ProjectsPage() {
                   <div className='absolute bottom-4 left-4 right-4'>
                     <div className='flex items-center justify-between'>
                       <span className='text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full'>
-                        {project.timeline}
+                        {project.timeline || 'Ongoing'}
                       </span>
                       <span className='text-sm text-foreground/70'>
-                        {project.team}
+                        {project.team || 'Professional Team'}
                       </span>
                     </div>
                   </div>
@@ -257,11 +200,11 @@ export default function ProjectsPage() {
                   <div className='flex items-center justify-between'>
                     <div className='flex items-center space-x-2 text-sm text-foreground/60'>
                       <Calendar className='w-4 h-4' />
-                      <span>{project.date}</span>
+                      <span>{new Date(project.createdAt).getFullYear()}</span>
                     </div>
 
                     <Link
-                      href={`/projects/${project.id}`}
+                      href={`/projects/${project._id}`}
                       className='inline-flex items-center space-x-2 text-primary hover:text-primary/80 font-medium transition-colors'
                     >
                       <span>View Timeline</span>

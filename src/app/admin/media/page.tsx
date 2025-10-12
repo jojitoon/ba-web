@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery } from 'convex/react';
 import {
   Image,
   Video,
@@ -14,104 +15,8 @@ import {
   Trash2,
   Eye,
   Calendar,
-  FileText,
 } from 'lucide-react';
-
-// Mock data - in a real app, this would come from Convex
-const mediaFiles = [
-  {
-    id: 1,
-    name: 'construction-site-01.jpg',
-    type: 'image',
-    size: '2.4 MB',
-    dimensions: '1920x1080',
-    uploadedAt: '2024-01-15',
-    project: 'Downtown Office Complex',
-    story: null,
-    url: '/api/placeholder/300/200',
-  },
-  {
-    id: 2,
-    name: 'timelapse-construction.mp4',
-    type: 'video',
-    size: '45.2 MB',
-    dimensions: '1920x1080',
-    uploadedAt: '2024-01-14',
-    project: 'Downtown Office Complex',
-    story: null,
-    url: '/api/placeholder/300/200',
-  },
-  {
-    id: 3,
-    name: 'bakery-interior.jpg',
-    type: 'image',
-    size: '1.8 MB',
-    dimensions: '1920x1080',
-    uploadedAt: '2024-01-13',
-    project: null,
-    story: 'The Family Bakery',
-    url: '/api/placeholder/300/200',
-  },
-  {
-    id: 4,
-    name: 'team-interview.mp4',
-    type: 'video',
-    size: '128.5 MB',
-    dimensions: '1920x1080',
-    uploadedAt: '2024-01-12',
-    project: 'Residential Tower',
-    story: null,
-    url: '/api/placeholder/300/200',
-  },
-  {
-    id: 5,
-    name: 'hardware-store-front.jpg',
-    type: 'image',
-    size: '3.1 MB',
-    dimensions: '1920x1080',
-    uploadedAt: '2024-01-11',
-    project: null,
-    story: 'The Corner Hardware Store',
-    url: '/api/placeholder/300/200',
-  },
-  {
-    id: 6,
-    name: 'aerial-drone-footage.mp4',
-    type: 'video',
-    size: '89.7 MB',
-    dimensions: '1920x1080',
-    uploadedAt: '2024-01-10',
-    project: 'Industrial Facility',
-    story: null,
-    url: '/api/placeholder/300/200',
-  },
-  {
-    id: 7,
-    name: 'family-photo-old.jpg',
-    type: 'image',
-    size: '1.2 MB',
-    dimensions: '1920x1080',
-    uploadedAt: '2024-01-09',
-    project: null,
-    story: 'The Family Bakery',
-    url: '/api/placeholder/300/200',
-  },
-  {
-    id: 8,
-    name: 'construction-progress.jpg',
-    type: 'image',
-    size: '2.9 MB',
-    dimensions: '1920x1080',
-    uploadedAt: '2024-01-08',
-    project: 'University Campus',
-    story: null,
-    url: '/api/placeholder/300/200',
-  },
-];
-
-const typeOptions = ['All', 'Image', 'Video'];
-const projectOptions = ['All', 'Downtown Office Complex', 'Residential Tower', 'Industrial Facility', 'University Campus'];
-const storyOptions = ['All', 'The Family Bakery', 'The Corner Hardware Store'];
+import { api } from 'convex/_generated/api';
 
 export default function AdminMedia() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -120,11 +25,35 @@ export default function AdminMedia() {
   const [storyFilter, setStoryFilter] = useState('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
+  // Get all media files from Convex
+  const mediaFiles = useQuery(api.media.list, {}) || [];
+  const projects = useQuery(api.projects.list, {}) || [];
+  const businessStories = useQuery(api.businessStories.list, {}) || [];
+
+  const typeOptions = ['All', 'Image', 'Video'];
+  const projectOptions = ['All', ...projects.map((p) => p.title)];
+  const storyOptions = ['All', ...businessStories.map((s) => s.title)];
+
   const filteredMedia = mediaFiles.filter((file) => {
-    const matchesSearch = file.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = typeFilter === 'All' || file.type === typeFilter.toLowerCase();
-    const matchesProject = projectFilter === 'All' || file.project === projectFilter;
-    const matchesStory = storyFilter === 'All' || file.story === storyFilter;
+    const matchesSearch = file.filename
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesType =
+      typeFilter === 'All' || file.type === typeFilter.toLowerCase();
+
+    // Find associated project/story names
+    const associatedProject = file.projectId
+      ? projects.find((p) => p._id === file.projectId)
+      : null;
+    const associatedStory = file.storyId
+      ? businessStories.find((s) => s._id === file.storyId)
+      : null;
+
+    const matchesProject =
+      projectFilter === 'All' || associatedProject?.title === projectFilter;
+    const matchesStory =
+      storyFilter === 'All' || associatedStory?.title === storyFilter;
+
     return matchesSearch && matchesType && matchesProject && matchesStory;
   });
 
@@ -227,55 +156,66 @@ export default function AdminMedia() {
       {/* Media Grid/List */}
       {viewMode === 'grid' ? (
         <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6'>
-          {filteredMedia.map((file) => (
-            <div
-              key={file.id}
-              className='bg-card rounded-xl overflow-hidden metallic-border hover:metallic-glow transition-all duration-300 group'
-            >
-              <div className='relative aspect-video bg-background'>
-                {file.type === 'image' ? (
-                  <div className='w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center'>
-                    <Image className='w-12 h-12 text-primary/50' />
-                  </div>
-                ) : (
-                  <div className='w-full h-full bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center'>
-                    <Video className='w-12 h-12 text-accent/50' />
-                  </div>
-                )}
-                <div className='absolute inset-0 bg-background/0 group-hover:bg-background/20 transition-colors' />
-                <div className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity'>
-                  <button className='p-2 bg-background/80 rounded-lg hover:bg-background transition-colors'>
-                    <MoreVertical className='w-4 h-4 text-foreground' />
-                  </button>
-                </div>
-              </div>
-              <div className='p-4'>
-                <h3 className='font-medium text-foreground truncate mb-1'>
-                  {file.name}
-                </h3>
-                <div className='text-sm text-foreground/60 space-y-1'>
-                  <div className='flex items-center justify-between'>
-                    <span>{file.size}</span>
-                    <span className='capitalize'>{file.type}</span>
-                  </div>
-                  <div className='flex items-center space-x-1'>
-                    <Calendar className='w-3 h-3' />
-                    <span>{file.uploadedAt}</span>
-                  </div>
-                  {file.project && (
-                    <div className='text-xs text-primary'>
-                      Project: {file.project}
+          {filteredMedia.map((file) => {
+            const associatedProject = file.projectId
+              ? projects.find((p) => p._id === file.projectId)
+              : null;
+            const associatedStory = file.storyId
+              ? businessStories.find((s) => s._id === file.storyId)
+              : null;
+
+            return (
+              <div
+                key={file._id}
+                className='bg-card rounded-xl overflow-hidden metallic-border hover:metallic-glow transition-all duration-300 group'
+              >
+                <div className='relative aspect-video bg-background'>
+                  {file.type === 'image' ? (
+                    <div className='w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center'>
+                      <Image className='w-12 h-12 text-primary/50' />
+                    </div>
+                  ) : (
+                    <div className='w-full h-full bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center'>
+                      <Video className='w-12 h-12 text-accent/50' />
                     </div>
                   )}
-                  {file.story && (
-                    <div className='text-xs text-accent'>
-                      Story: {file.story}
+                  <div className='absolute inset-0 bg-background/0 group-hover:bg-background/20 transition-colors' />
+                  <div className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity'>
+                    <button className='p-2 bg-background/80 rounded-lg hover:bg-background transition-colors'>
+                      <MoreVertical className='w-4 h-4 text-foreground' />
+                    </button>
+                  </div>
+                </div>
+                <div className='p-4'>
+                  <h3 className='font-medium text-foreground truncate mb-1'>
+                    {file.filename}
+                  </h3>
+                  <div className='text-sm text-foreground/60 space-y-1'>
+                    <div className='flex items-center justify-between'>
+                      <span>{(file.size / 1024 / 1024).toFixed(1)} MB</span>
+                      <span className='capitalize'>{file.type}</span>
                     </div>
-                  )}
+                    <div className='flex items-center space-x-1'>
+                      <Calendar className='w-3 h-3' />
+                      <span>
+                        {new Date(file.uploadedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {associatedProject && (
+                      <div className='text-xs text-primary'>
+                        Project: {associatedProject.title}
+                      </div>
+                    )}
+                    {associatedStory && (
+                      <div className='text-xs text-accent'>
+                        Story: {associatedStory.title}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className='bg-card rounded-xl overflow-hidden metallic-border'>
@@ -307,65 +247,77 @@ export default function AdminMedia() {
                 </tr>
               </thead>
               <tbody className='divide-y divide-border'>
-                {filteredMedia.map((file) => (
-                  <tr key={file.id} className='hover:bg-secondary/20 transition-colors'>
-                    <td className='px-6 py-4'>
-                      <div className='flex items-center space-x-3'>
-                        <div className='w-10 h-10 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center'>
-                          {file.type === 'image' ? (
-                            <Image className='w-5 h-5 text-primary/50' />
-                          ) : (
-                            <Video className='w-5 h-5 text-accent/50' />
-                          )}
-                        </div>
-                        <div>
-                          <div className='font-medium text-foreground'>
-                            {file.name}
+                {filteredMedia.map((file) => {
+                  const associatedProject = file.projectId
+                    ? projects.find((p) => p._id === file.projectId)
+                    : null;
+                  const associatedStory = file.storyId
+                    ? businessStories.find((s) => s._id === file.storyId)
+                    : null;
+
+                  return (
+                    <tr
+                      key={file._id}
+                      className='hover:bg-secondary/20 transition-colors'
+                    >
+                      <td className='px-6 py-4'>
+                        <div className='flex items-center space-x-3'>
+                          <div className='w-10 h-10 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center'>
+                            {file.type === 'image' ? (
+                              <Image className='w-5 h-5 text-primary/50' />
+                            ) : (
+                              <Video className='w-5 h-5 text-accent/50' />
+                            )}
+                          </div>
+                          <div>
+                            <div className='font-medium text-foreground'>
+                              {file.filename}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className='px-6 py-4'>
-                      <span className='capitalize text-foreground/80'>
-                        {file.type}
-                      </span>
-                    </td>
-                    <td className='px-6 py-4 text-foreground/80'>
-                      {file.size}
-                    </td>
-                    <td className='px-6 py-4 text-foreground/80'>
-                      {file.dimensions}
-                    </td>
-                    <td className='px-6 py-4 text-foreground/80'>
-                      {file.uploadedAt}
-                    </td>
-                    <td className='px-6 py-4'>
-                      {file.project && (
-                        <span className='text-xs bg-primary/20 text-primary px-2 py-1 rounded-full'>
-                          {file.project}
+                      </td>
+                      <td className='px-6 py-4'>
+                        <span className='capitalize text-foreground/80'>
+                          {file.type}
                         </span>
-                      )}
-                      {file.story && (
-                        <span className='text-xs bg-accent/20 text-accent px-2 py-1 rounded-full'>
-                          {file.story}
-                        </span>
-                      )}
-                    </td>
-                    <td className='px-6 py-4'>
-                      <div className='flex items-center justify-end space-x-2'>
-                        <button className='p-2 rounded-lg hover:bg-secondary transition-colors'>
-                          <Eye className='w-4 h-4 text-foreground/60' />
-                        </button>
-                        <button className='p-2 rounded-lg hover:bg-secondary transition-colors'>
-                          <Download className='w-4 h-4 text-foreground/60' />
-                        </button>
-                        <button className='p-2 rounded-lg hover:bg-secondary transition-colors'>
-                          <Trash2 className='w-4 h-4 text-foreground/60' />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className='px-6 py-4 text-foreground/80'>
+                        {(file.size / 1024 / 1024).toFixed(1)} MB
+                      </td>
+                      <td className='px-6 py-4 text-foreground/80'>
+                        {file.mimeType}
+                      </td>
+                      <td className='px-6 py-4 text-foreground/80'>
+                        {new Date(file.uploadedAt).toLocaleDateString()}
+                      </td>
+                      <td className='px-6 py-4'>
+                        {associatedProject && (
+                          <span className='text-xs bg-primary/20 text-primary px-2 py-1 rounded-full'>
+                            {associatedProject.title}
+                          </span>
+                        )}
+                        {associatedStory && (
+                          <span className='text-xs bg-accent/20 text-accent px-2 py-1 rounded-full'>
+                            {associatedStory.title}
+                          </span>
+                        )}
+                      </td>
+                      <td className='px-6 py-4'>
+                        <div className='flex items-center justify-end space-x-2'>
+                          <button className='p-2 rounded-lg hover:bg-secondary transition-colors'>
+                            <Eye className='w-4 h-4 text-foreground/60' />
+                          </button>
+                          <button className='p-2 rounded-lg hover:bg-secondary transition-colors'>
+                            <Download className='w-4 h-4 text-foreground/60' />
+                          </button>
+                          <button className='p-2 rounded-lg hover:bg-secondary transition-colors'>
+                            <Trash2 className='w-4 h-4 text-foreground/60' />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

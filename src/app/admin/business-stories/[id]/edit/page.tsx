@@ -1,13 +1,19 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useMutation } from 'convex/react';
-import { api } from 'convex/_generated/api';
-import MediaUpload from '@/components/media-upload';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../../../../convex/_generated/api';
+import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Eye, Plus, X } from 'lucide-react';
 
-export default function NewBusinessStory() {
+export default function EditBusinessStory() {
+  const params = useParams();
+  const router = useRouter();
+  const storyId = params.id as string;
+
+  const story = useQuery(api.businessStories.get, { id: storyId as any });
+  const updateStory = useMutation(api.businessStories.update);
+
   const [formData, setFormData] = useState({
     title: '',
     business: '',
@@ -15,7 +21,7 @@ export default function NewBusinessStory() {
     category: '',
     status: 'Draft' as const,
     duration: '',
-    rating: 0,
+    rating: 5,
     founded: '',
     employees: '',
     description: '',
@@ -31,26 +37,41 @@ export default function NewBusinessStory() {
     },
   });
 
-  const [uploadedMediaIds, setUploadedMediaIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const createStory = useMutation(api.businessStories.create);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      await createStory(formData);
-      // Redirect to business stories list
-      window.location.href = '/admin/business-stories';
-    } catch (error) {
-      console.error('Failed to create business story:', error);
-      alert('Failed to create business story. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+  // Load story data when it's available
+  useEffect(() => {
+    if (story) {
+      setFormData({
+        title: story.title,
+        business: story.business,
+        location: story.location,
+        category: story.category,
+        status: story.status,
+        duration: story.duration || '',
+        rating: story.rating || 5,
+        founded: story.founded,
+        employees: story.employees,
+        description: story.description,
+        fullDescription: story.fullDescription || '',
+        ownerStory: story.ownerStory || '',
+        milestones:
+          story.milestones.length > 0
+            ? story.milestones
+            : [{ year: '', title: '', description: '' }],
+        testimonials:
+          story.testimonials.length > 0
+            ? story.testimonials
+            : [{ name: '', role: '', content: '', rating: 5 }],
+        supportLinks: {
+          website: story.supportLinks.website || '',
+          phone: story.supportLinks.phone || '',
+          email: story.supportLinks.email || '',
+          address: story.supportLinks.address || '',
+        },
+      });
     }
-  };
+  }, [story]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({
@@ -59,15 +80,11 @@ export default function NewBusinessStory() {
     }));
   };
 
-  const handleNestedInputChange = (
-    parent: string,
-    field: string,
-    value: any
-  ) => {
+  const handleSupportLinkChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      [parent]: {
-        ...(prev[parent as keyof typeof prev] as any),
+      supportLinks: {
+        ...prev.supportLinks,
         [field]: value,
       },
     }));
@@ -107,7 +124,7 @@ export default function NewBusinessStory() {
   const handleTestimonialChange = (
     index: number,
     field: string,
-    value: any
+    value: string | number
   ) => {
     const newTestimonials = [...formData.testimonials];
     newTestimonials[index] = { ...newTestimonials[index], [field]: value };
@@ -135,23 +152,85 @@ export default function NewBusinessStory() {
     }));
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // Filter out empty milestones and testimonials
+      const filteredMilestones = formData.milestones.filter(
+        (milestone) =>
+          milestone.year.trim() !== '' &&
+          milestone.title.trim() !== '' &&
+          milestone.description.trim() !== ''
+      );
+      const filteredTestimonials = formData.testimonials.filter(
+        (testimonial) =>
+          testimonial.name.trim() !== '' && testimonial.content.trim() !== ''
+      );
+
+      await updateStory({
+        id: storyId as any,
+        title: formData.title,
+        business: formData.business,
+        location: formData.location,
+        category: formData.category,
+        status: formData.status,
+        duration: formData.duration || undefined,
+        rating: formData.rating,
+        founded: formData.founded,
+        employees: formData.employees,
+        description: formData.description,
+        fullDescription: formData.fullDescription || undefined,
+        ownerStory: formData.ownerStory || undefined,
+        milestones: filteredMilestones,
+        testimonials: filteredTestimonials,
+        supportLinks: {
+          website: formData.supportLinks.website || undefined,
+          phone: formData.supportLinks.phone || undefined,
+          email: formData.supportLinks.email || undefined,
+          address: formData.supportLinks.address || undefined,
+        },
+      });
+
+      // Redirect to business stories list
+      router.push('/admin/business-stories');
+    } catch (error) {
+      console.error('Failed to update business story:', error);
+      alert('Failed to update business story. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!story) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div>
+          <p className='text-foreground/70'>Loading business story...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className='space-y-8'>
       {/* Header */}
       <div className='flex items-center justify-between'>
         <div className='flex items-center space-x-4'>
-          <Link
-            href='/admin/business-stories'
+          <button
+            onClick={() => router.back()}
             className='p-2 rounded-lg hover:bg-secondary transition-colors'
           >
             <ArrowLeft className='w-5 h-5 text-foreground' />
-          </Link>
+          </button>
           <div>
-            <h1 className='text-3xl font-bold text-foreground'>
-              New Business Story
+            <h1 className='text-4xl font-bold text-foreground'>
+              Edit Business Story
             </h1>
-            <p className='text-foreground/70 mt-1'>
-              Create a new business documentary story.
+            <p className='text-foreground/70'>
+              Update the business story information and content.
             </p>
           </div>
         </div>
@@ -161,12 +240,12 @@ export default function NewBusinessStory() {
             <span>Preview</span>
           </button>
           <button
-            type='submit'
+            onClick={handleSubmit}
             disabled={isSubmitting}
             className='bg-accent text-accent-foreground px-6 py-3 rounded-lg font-medium hover:bg-accent/90 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed'
           >
             <Save className='w-5 h-5' />
-            <span>{isSubmitting ? 'Saving...' : 'Save Story'}</span>
+            <span>{isSubmitting ? 'Saving...' : 'Save Changes'}</span>
           </button>
         </div>
       </div>
@@ -179,70 +258,82 @@ export default function NewBusinessStory() {
           </h2>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
-                Story Title *
+              <label
+                htmlFor='title'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
+                Story Title
               </label>
               <input
                 type='text'
-                required
+                id='title'
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
-                placeholder='Enter story title'
+                required
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
-                Business Name *
+              <label
+                htmlFor='business'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
+                Business Name
               </label>
               <input
                 type='text'
-                required
+                id='business'
                 value={formData.business}
                 onChange={(e) => handleInputChange('business', e.target.value)}
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
-                placeholder='Enter business name'
+                required
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
-                Location *
+              <label
+                htmlFor='location'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
+                Location
               </label>
               <input
                 type='text'
-                required
+                id='location'
                 value={formData.location}
                 onChange={(e) => handleInputChange('location', e.target.value)}
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
-                placeholder='City, State'
+                required
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
-                Category *
+              <label
+                htmlFor='category'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
+                Category
               </label>
-              <select
-                required
+              <input
+                type='text'
+                id='category'
                 value={formData.category}
                 onChange={(e) => handleInputChange('category', e.target.value)}
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
-              >
-                <option value=''>Select category</option>
-                <option value='Food & Beverage'>Food & Beverage</option>
-                <option value='Retail'>Retail</option>
-                <option value='Manufacturing'>Manufacturing</option>
-                <option value='Agriculture'>Agriculture</option>
-                <option value='Services'>Services</option>
-                <option value='Technology'>Technology</option>
-              </select>
+                required
+              />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
+              <label
+                htmlFor='status'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
                 Status
               </label>
               <select
+                id='status'
                 value={formData.status}
-                onChange={(e) => handleInputChange('status', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange('status', e.target.value as any)
+                }
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
               >
                 <option value='Draft'>Draft</option>
@@ -251,65 +342,51 @@ export default function NewBusinessStory() {
               </select>
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
-                Video Duration
+              <label
+                htmlFor='duration'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
+                Duration
               </label>
               <input
                 type='text'
+                id='duration'
                 value={formData.duration}
                 onChange={(e) => handleInputChange('duration', e.target.value)}
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
                 placeholder='e.g., 45 min'
               />
             </div>
-          </div>
-        </div>
-
-        {/* Business Details */}
-        <div className='bg-card rounded-xl p-6 metallic-border'>
-          <h2 className='text-xl font-bold text-foreground mb-6'>
-            Business Details
-          </h2>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
+              <label
+                htmlFor='founded'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
                 Founded Year
               </label>
               <input
                 type='text'
+                id='founded'
                 value={formData.founded}
                 onChange={(e) => handleInputChange('founded', e.target.value)}
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
-                placeholder='e.g., 1952'
+                required
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
+              <label
+                htmlFor='employees'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
                 Number of Employees
               </label>
               <input
                 type='text'
+                id='employees'
                 value={formData.employees}
                 onChange={(e) => handleInputChange('employees', e.target.value)}
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
-                placeholder='e.g., 12'
-              />
-            </div>
-            <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
-                Rating (0-5)
-              </label>
-              <input
-                type='number'
-                min='0'
-                max='5'
-                step='0.1'
-                value={formData.rating}
-                onChange={(e) =>
-                  handleInputChange('rating', parseFloat(e.target.value))
-                }
-                className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
-                placeholder='4.9'
+                required
               />
             </div>
           </div>
@@ -322,11 +399,14 @@ export default function NewBusinessStory() {
           </h2>
           <div className='space-y-6'>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
-                Short Description *
+              <label
+                htmlFor='description'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
+                Short Description
               </label>
               <textarea
-                required
+                id='description'
                 rows={3}
                 value={formData.description}
                 onChange={(e) =>
@@ -334,13 +414,18 @@ export default function NewBusinessStory() {
                 }
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
                 placeholder='Brief story description'
+                required
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
+              <label
+                htmlFor='fullDescription'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
                 Full Description
               </label>
               <textarea
+                id='fullDescription'
                 rows={6}
                 value={formData.fullDescription}
                 onChange={(e) =>
@@ -351,17 +436,21 @@ export default function NewBusinessStory() {
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
+              <label
+                htmlFor='ownerStory'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
                 Owner's Story
               </label>
               <textarea
+                id='ownerStory'
                 rows={6}
                 value={formData.ownerStory}
                 onChange={(e) =>
                   handleInputChange('ownerStory', e.target.value)
                 }
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
-                placeholder="Tell the owner's personal story and journey"
+                placeholder="The owner's personal story and journey"
               />
             </div>
           </div>
@@ -404,9 +493,9 @@ export default function NewBusinessStory() {
                     handleMilestoneChange(index, 'title', e.target.value)
                   }
                   className='px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
-                  placeholder='Milestone title'
+                  placeholder='Milestone Title'
                 />
-                <div className='flex items-center space-x-3'>
+                <div className='flex items-center space-x-2'>
                   <input
                     type='text'
                     value={milestone.description}
@@ -423,7 +512,7 @@ export default function NewBusinessStory() {
                   <button
                     type='button'
                     onClick={() => removeMilestone(index)}
-                    className='p-3 rounded-lg hover:bg-secondary transition-colors'
+                    className='p-2 rounded-lg hover:bg-secondary transition-colors'
                   >
                     <X className='w-4 h-4 text-foreground/60' />
                   </button>
@@ -462,7 +551,7 @@ export default function NewBusinessStory() {
                       handleTestimonialChange(index, 'name', e.target.value)
                     }
                     className='px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
-                    placeholder='Customer name'
+                    placeholder='Customer Name'
                   />
                   <input
                     type='text'
@@ -471,10 +560,29 @@ export default function NewBusinessStory() {
                       handleTestimonialChange(index, 'role', e.target.value)
                     }
                     className='px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
-                    placeholder='Customer role'
+                    placeholder='Role/Title'
                   />
                 </div>
-                <div className='flex items-center space-x-3 mb-4'>
+                <div className='flex items-center space-x-2 mb-4'>
+                  <input
+                    type='text'
+                    value={testimonial.content}
+                    onChange={(e) =>
+                      handleTestimonialChange(index, 'content', e.target.value)
+                    }
+                    className='flex-1 px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+                    placeholder='Testimonial content'
+                  />
+                  <button
+                    type='button'
+                    onClick={() => removeTestimonial(index)}
+                    className='p-2 rounded-lg hover:bg-secondary transition-colors'
+                  >
+                    <X className='w-4 h-4 text-foreground/60' />
+                  </button>
+                </div>
+                <div className='flex items-center space-x-2'>
+                  <label className='text-sm text-foreground/70'>Rating:</label>
                   <input
                     type='number'
                     min='1'
@@ -487,30 +595,8 @@ export default function NewBusinessStory() {
                         parseInt(e.target.value)
                       )
                     }
-                    className='w-20 px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
-                    placeholder='Rating'
+                    className='w-20 px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
                   />
-                  <span className='text-sm text-foreground/60'>
-                    Rating (1-5)
-                  </span>
-                </div>
-                <div className='flex items-start space-x-3'>
-                  <textarea
-                    rows={3}
-                    value={testimonial.content}
-                    onChange={(e) =>
-                      handleTestimonialChange(index, 'content', e.target.value)
-                    }
-                    className='flex-1 px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
-                    placeholder='Testimonial content'
-                  />
-                  <button
-                    type='button'
-                    onClick={() => removeTestimonial(index)}
-                    className='p-3 rounded-lg hover:bg-secondary transition-colors'
-                  >
-                    <X className='w-4 h-4 text-foreground/60' />
-                  </button>
                 </div>
               </div>
             ))}
@@ -524,91 +610,78 @@ export default function NewBusinessStory() {
           </h2>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
+              <label
+                htmlFor='website'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
                 Website
               </label>
               <input
                 type='url'
+                id='website'
                 value={formData.supportLinks.website}
                 onChange={(e) =>
-                  handleNestedInputChange(
-                    'supportLinks',
-                    'website',
-                    e.target.value
-                  )
+                  handleSupportLinkChange('website', e.target.value)
                 }
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
-                placeholder='https://example.com'
+                placeholder='https://www.business.com'
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
+              <label
+                htmlFor='phone'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
                 Phone
               </label>
               <input
                 type='tel'
+                id='phone'
                 value={formData.supportLinks.phone}
                 onChange={(e) =>
-                  handleNestedInputChange(
-                    'supportLinks',
-                    'phone',
-                    e.target.value
-                  )
+                  handleSupportLinkChange('phone', e.target.value)
                 }
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
-                placeholder='+1 (555) 123-4567'
+                placeholder='+1 (123) 456-7890'
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
+              <label
+                htmlFor='email'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
                 Email
               </label>
               <input
                 type='email'
+                id='email'
                 value={formData.supportLinks.email}
                 onChange={(e) =>
-                  handleNestedInputChange(
-                    'supportLinks',
-                    'email',
-                    e.target.value
-                  )
+                  handleSupportLinkChange('email', e.target.value)
                 }
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
-                placeholder='contact@example.com'
+                placeholder='info@business.com'
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-foreground mb-2'>
+              <label
+                htmlFor='address'
+                className='block text-sm font-medium text-foreground/70 mb-2'
+              >
                 Address
               </label>
               <input
                 type='text'
+                id='address'
                 value={formData.supportLinks.address}
                 onChange={(e) =>
-                  handleNestedInputChange(
-                    'supportLinks',
-                    'address',
-                    e.target.value
-                  )
+                  handleSupportLinkChange('address', e.target.value)
                 }
                 className='w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
-                placeholder='123 Main St, City, State 12345'
+                placeholder='123 Business St, City, State, ZIP'
               />
             </div>
           </div>
-        </div>
-
-        {/* Media Upload */}
-        <div className='bg-card rounded-xl p-6 metallic-border'>
-          <h2 className='text-xl font-bold text-foreground mb-6'>
-            Media Files
-          </h2>
-          <MediaUpload
-            storyId={undefined} // Will be set after story creation
-            onUploadComplete={setUploadedMediaIds}
-            accept='image/*,video/*'
-            maxFiles={10}
-          />
         </div>
       </form>
     </div>

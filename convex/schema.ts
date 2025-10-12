@@ -8,6 +8,8 @@ export default defineSchema({
     category: v.string(),
     status: v.union(
       v.literal('Draft'),
+      v.literal('Archived'),
+      v.literal('In Progress'),
       v.literal('In Review'),
       v.literal('Published')
     ),
@@ -65,6 +67,8 @@ export default defineSchema({
     status: v.union(
       v.literal('Draft'),
       v.literal('In Review'),
+      v.literal('Archived'),
+      v.literal('In Progress'),
       v.literal('Published')
     ),
     duration: v.optional(v.string()),

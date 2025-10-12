@@ -16,6 +16,7 @@ import {
   Plus,
   BarChart3,
 } from 'lucide-react';
+import { useAuth } from '@/contexts/auth-context';
 
 const adminNavItems = [
   {
@@ -62,6 +63,7 @@ export default function AdminLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   return (
     <div className='min-h-screen bg-background'>
@@ -136,7 +138,11 @@ export default function AdminLayout({
                   admin@builtancestry.com
                 </p>
               </div>
-              <button className='p-2 rounded-lg hover:bg-secondary transition-colors'>
+              <button
+                onClick={logout}
+                className='p-2 rounded-lg hover:bg-secondary transition-colors'
+                title='Logout'
+              >
                 <LogOut className='w-4 h-4 text-foreground/60' />
               </button>
             </div>
@@ -173,9 +179,7 @@ export default function AdminLayout({
         </header>
 
         {/* Page content */}
-        <main className='p-4 sm:p-6 lg:p-8'>
-          {children}
-        </main>
+        <main className='p-4 sm:p-6 lg:p-8'>{children}</main>
       </div>
     </div>
   );

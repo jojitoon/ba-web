@@ -3,6 +3,8 @@
 import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
 import Link from 'next/link';
+import { useQuery } from 'convex/react';
+import { api } from 'convex/_generated/api';
 import {
   Play,
   Clock,
@@ -14,99 +16,6 @@ import {
   Calendar,
 } from 'lucide-react';
 import { useState } from 'react';
-
-const allStories = [
-  {
-    id: 1,
-    title: 'The Family Bakery',
-    business: "Mama Rosa's Bakery",
-    location: 'Brooklyn, NY',
-    duration: '45 min',
-    rating: 4.9,
-    image: '/api/placeholder/400/300',
-    description:
-      'Three generations of bakers preserving traditional recipes while embracing modern innovation.',
-    founded: '1952',
-    employees: '12',
-    category: 'Food & Beverage',
-    year: '2024',
-  },
-  {
-    id: 2,
-    title: 'The Corner Hardware Store',
-    business: "Johnson's Hardware",
-    location: 'Austin, TX',
-    duration: '38 min',
-    rating: 4.8,
-    image: '/api/placeholder/400/300',
-    description:
-      'From fixing leaky faucets to building communities - the story of a neighborhood institution.',
-    founded: '1978',
-    employees: '8',
-    category: 'Retail',
-    year: '2024',
-  },
-  {
-    id: 3,
-    title: 'The Artisan Workshop',
-    business: 'Craft & Co.',
-    location: 'Portland, OR',
-    duration: '52 min',
-    rating: 4.9,
-    image: '/api/placeholder/400/300',
-    description:
-      'Where traditional craftsmanship meets contemporary design in a modern workshop.',
-    founded: '1985',
-    employees: '15',
-    category: 'Manufacturing',
-    year: '2023',
-  },
-  {
-    id: 4,
-    title: 'The Neighborhood Bookstore',
-    business: 'Pages & Prose',
-    location: 'Seattle, WA',
-    duration: '41 min',
-    rating: 4.7,
-    image: '/api/placeholder/400/300',
-    description:
-      'A literary haven that has fostered community and learning for over three decades.',
-    founded: '1990',
-    employees: '6',
-    category: 'Retail',
-    year: '2024',
-  },
-  {
-    id: 5,
-    title: 'The Local Brewery',
-    business: 'Hometown Hops',
-    location: 'Denver, CO',
-    duration: '48 min',
-    rating: 4.8,
-    image: '/api/placeholder/400/300',
-    description:
-      'From garage experiment to community cornerstone - the story of craft beer passion.',
-    founded: '2005',
-    employees: '25',
-    category: 'Food & Beverage',
-    year: '2023',
-  },
-  {
-    id: 6,
-    title: 'The Family Farm',
-    business: 'Green Acres Organic',
-    location: 'Iowa',
-    duration: '55 min',
-    rating: 4.9,
-    image: '/api/placeholder/400/300',
-    description:
-      'Five generations of sustainable farming and community connection.',
-    founded: '1920',
-    employees: '18',
-    category: 'Agriculture',
-    year: '2024',
-  },
-];
 
 const categories = [
   'All',
@@ -121,15 +30,31 @@ export default function BusinessStoriesPage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredStories = allStories.filter((story) => {
-    const matchesCategory =
-      selectedCategory === 'All' || story.category === selectedCategory;
-    const matchesSearch =
-      story.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      story.business.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      story.location.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const stories = useQuery(api.businessStories.list, { status: 'Published' });
+
+  const filteredStories =
+    stories?.filter((story) => {
+      const matchesCategory =
+        selectedCategory === 'All' || story.category === selectedCategory;
+      const matchesSearch =
+        story.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        story.business.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        story.location.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesCategory && matchesSearch;
+    }) || [];
+
+  if (stories === undefined) {
+    return (
+      <div className='min-h-screen bg-background'>
+        <Navigation />
+        <div className='pt-20 pb-16 text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4'></div>
+          <p className='text-foreground/70'>Loading business stories...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen bg-background'>
@@ -182,23 +107,45 @@ export default function BusinessStoriesPage() {
           <div className='grid grid-cols-1 sm:grid-cols-4 gap-6 text-center'>
             <div className='bg-card/50 rounded-lg p-4 metallic-border'>
               <div className='text-2xl font-bold text-accent mb-1'>
-                {allStories.length}
+                {stories?.length || 0}
               </div>
               <div className='text-foreground/70 text-sm'>Documentaries</div>
             </div>
             <div className='bg-card/50 rounded-lg p-4 metallic-border'>
               <div className='text-2xl font-bold text-primary mb-1'>
-                {allStories.reduce((acc, story) => acc + story.rating, 0) /
-                  allStories.length}
+                {stories && stories.length > 0
+                  ? (
+                      stories.reduce(
+                        (acc, story) => acc + (story.rating || 0),
+                        0
+                      ) / stories.length
+                    ).toFixed(1)
+                  : '0.0'}
               </div>
               <div className='text-foreground/70 text-sm'>Avg Rating</div>
             </div>
             <div className='bg-card/50 rounded-lg p-4 metallic-border'>
-              <div className='text-2xl font-bold text-accent mb-1'>100+</div>
-              <div className='text-foreground/70 text-sm'>Hours of Content</div>
+              <div className='text-2xl font-bold text-accent mb-1'>
+                {stories?.reduce((acc, story) => {
+                  const duration = story.duration
+                    ? parseInt(story.duration)
+                    : 0;
+                  return acc + duration;
+                }, 0) || 0}
+                +
+              </div>
+              <div className='text-foreground/70 text-sm'>
+                Minutes of Content
+              </div>
             </div>
             <div className='bg-card/50 rounded-lg p-4 metallic-border'>
-              <div className='text-2xl font-bold text-primary mb-1'>25+</div>
+              <div className='text-2xl font-bold text-primary mb-1'>
+                {
+                  new Set(
+                    stories?.map((s) => s.location.split(',')[1]?.trim()) || []
+                  ).size
+                }
+              </div>
               <div className='text-foreground/70 text-sm'>States</div>
             </div>
           </div>
@@ -211,7 +158,7 @@ export default function BusinessStoriesPage() {
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
             {filteredStories.map((story) => (
               <div
-                key={story.id}
+                key={story._id}
                 className='group bg-card rounded-xl overflow-hidden metallic-border hover:metallic-glow transition-all duration-300'
               >
                 {/* Story Image */}
@@ -234,13 +181,13 @@ export default function BusinessStoriesPage() {
                       <div className='flex items-center space-x-2'>
                         <Clock className='w-4 h-4 text-foreground/70' />
                         <span className='text-sm text-foreground/70'>
-                          {story.duration}
+                          {story.duration || 'N/A'}
                         </span>
                       </div>
                       <div className='flex items-center space-x-1'>
                         <Star className='w-4 h-4 text-primary fill-current' />
                         <span className='text-sm text-foreground/70'>
-                          {story.rating}
+                          {story.rating || 'N/A'}
                         </span>
                       </div>
                     </div>
@@ -255,7 +202,7 @@ export default function BusinessStoriesPage() {
                     </span>
                     <div className='flex items-center space-x-2 text-sm text-foreground/60'>
                       <Calendar className='w-4 h-4' />
-                      <span>{story.year}</span>
+                      <span>{new Date(story.createdAt).getFullYear()}</span>
                     </div>
                   </div>
 
@@ -275,14 +222,14 @@ export default function BusinessStoriesPage() {
                     <div className='flex items-center space-x-4 text-sm text-foreground/60'>
                       <div className='flex items-center space-x-1'>
                         <Users className='w-4 h-4' />
-                        <span>{story.employees} employees</span>
+                        <span>{story.employees || 'N/A'} employees</span>
                       </div>
-                      <span>Founded {story.founded}</span>
+                      <span>Founded {story.founded || 'N/A'}</span>
                     </div>
                   </div>
 
                   <Link
-                    href={`/business-stories/${story.id}`}
+                    href={`/business-stories/${story._id}`}
                     className='inline-flex items-center space-x-2 text-accent hover:text-accent/80 font-medium transition-colors'
                   >
                     <span>Watch Documentary</span>

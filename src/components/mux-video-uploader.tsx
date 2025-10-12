@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { MuxUploader } from '@mux/mux-uploader-react';
 import { CheckCircle, AlertCircle, Upload } from 'lucide-react';
+import MuxUploader from '@mux/mux-uploader-react';
 
 interface MuxVideoUploaderProps {
   onUploadComplete?: (assetId: string, playbackId: string) => void;

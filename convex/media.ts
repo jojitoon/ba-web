@@ -70,3 +70,10 @@ export const getImageUrl = query({
     return await ctx.storage.getUrl(args.storageId);
   },
 });
+
+export const list = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query('media').order('desc').collect();
+  },
+});

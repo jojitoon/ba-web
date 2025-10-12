@@ -1,6 +1,8 @@
 'use client';
 
+import { useQuery, useMutation } from 'convex/react';
 import Link from 'next/link';
+import { useState } from 'react';
 import {
   Building2,
   Video,
@@ -8,89 +10,76 @@ import {
   Users,
   TrendingUp,
   Plus,
-  Eye,
   Edit,
   Trash2,
-  Calendar,
   MapPin,
 } from 'lucide-react';
-
-// Mock data - in a real app, this would come from Convex
-const dashboardStats = {
-  totalProjects: 24,
-  totalStories: 18,
-  totalMedia: 156,
-  totalUsers: 8,
-  recentProjects: [
-    {
-      id: 1,
-      title: 'Downtown Office Complex',
-      status: 'Published',
-      date: '2024-01-15',
-      views: 1247,
-    },
-    {
-      id: 2,
-      title: 'Residential Tower',
-      status: 'Draft',
-      date: '2024-01-14',
-      views: 0,
-    },
-    {
-      id: 3,
-      title: 'Industrial Facility',
-      status: 'Published',
-      date: '2024-01-12',
-      views: 892,
-    },
-  ],
-  recentStories: [
-    {
-      id: 1,
-      title: 'The Family Bakery',
-      business: "Mama Rosa's Bakery",
-      status: 'Published',
-      date: '2024-01-16',
-      views: 2156,
-    },
-    {
-      id: 2,
-      title: 'The Corner Hardware Store',
-      business: "Johnson's Hardware",
-      status: 'Published',
-      date: '2024-01-13',
-      views: 1834,
-    },
-  ],
-  recentActivity: [
-    {
-      id: 1,
-      type: 'project',
-      action: 'created',
-      title: 'University Campus',
-      user: 'Admin User',
-      time: '2 hours ago',
-    },
-    {
-      id: 2,
-      type: 'story',
-      action: 'updated',
-      title: 'The Family Bakery',
-      user: 'Admin User',
-      time: '4 hours ago',
-    },
-    {
-      id: 3,
-      type: 'media',
-      action: 'uploaded',
-      title: '15 new photos',
-      user: 'Admin User',
-      time: '6 hours ago',
-    },
-  ],
-};
+import { api } from 'convex/_generated/api';
+import DeleteConfirmation from '@/components/delete-confirmation';
 
 export default function AdminDashboard() {
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    type: 'project' | 'story' | null;
+    id: string | null;
+    title: string;
+  }>({
+    isOpen: false,
+    type: null,
+    id: null,
+    title: '',
+  });
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const projects = useQuery(api.projects.list, {});
+  const businessStories = useQuery(api.businessStories.list, {});
+
+  const deleteProject = useMutation(api.projects.deleteProject);
+  const deleteStory = useMutation(api.businessStories.deleteStory);
+
+  const totalProjects = projects?.length || 0;
+  const totalStories = businessStories?.length || 0;
+  const publishedProjects =
+    projects?.filter((p) => p.status === 'Published').length || 0;
+  const publishedStories =
+    businessStories?.filter((s) => s.status === 'Published').length || 0;
+
+  const handleDeleteClick = (
+    type: 'project' | 'story',
+    id: string,
+    title: string
+  ) => {
+    setDeleteModal({
+      isOpen: true,
+      type,
+      id,
+      title,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.id || !deleteModal.type) return;
+
+    setIsDeleting(true);
+    try {
+      if (deleteModal.type === 'project') {
+        await deleteProject({ id: deleteModal.id as any });
+      } else {
+        await deleteStory({ id: deleteModal.id as any });
+      }
+      setDeleteModal({ isOpen: false, type: null, id: null, title: '' });
+    } catch (error) {
+      console.error('Failed to delete item:', error);
+      alert('Failed to delete item. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModal({ isOpen: false, type: null, id: null, title: '' });
+  };
+
   return (
     <div className='space-y-8'>
       {/* Header */}
@@ -126,7 +115,7 @@ export default function AdminDashboard() {
             <div>
               <p className='text-sm text-foreground/60'>Total Projects</p>
               <p className='text-3xl font-bold text-foreground mt-1'>
-                {dashboardStats.totalProjects}
+                {totalProjects}
               </p>
             </div>
             <div className='w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center'>
@@ -135,7 +124,7 @@ export default function AdminDashboard() {
           </div>
           <div className='mt-4 flex items-center text-sm text-foreground/60'>
             <TrendingUp className='w-4 h-4 mr-1' />
-            <span>+12% from last month</span>
+            <span>{publishedProjects} published</span>
           </div>
         </div>
 
@@ -144,7 +133,7 @@ export default function AdminDashboard() {
             <div>
               <p className='text-sm text-foreground/60'>Business Stories</p>
               <p className='text-3xl font-bold text-foreground mt-1'>
-                {dashboardStats.totalStories}
+                {totalStories}
               </p>
             </div>
             <div className='w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center'>
@@ -153,7 +142,7 @@ export default function AdminDashboard() {
           </div>
           <div className='mt-4 flex items-center text-sm text-foreground/60'>
             <TrendingUp className='w-4 h-4 mr-1' />
-            <span>+8% from last month</span>
+            <span>{publishedStories} published</span>
           </div>
         </div>
 
@@ -162,7 +151,11 @@ export default function AdminDashboard() {
             <div>
               <p className='text-sm text-foreground/60'>Media Files</p>
               <p className='text-3xl font-bold text-foreground mt-1'>
-                {dashboardStats.totalMedia}
+                {projects?.reduce(
+                  (acc, p) =>
+                    acc + p.media.photos.length + p.media.videos.length,
+                  0
+                ) || 0}
               </p>
             </div>
             <div className='w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center'>
@@ -171,16 +164,16 @@ export default function AdminDashboard() {
           </div>
           <div className='mt-4 flex items-center text-sm text-foreground/60'>
             <TrendingUp className='w-4 h-4 mr-1' />
-            <span>+24% from last month</span>
+            <span>Across all projects</span>
           </div>
         </div>
 
         <div className='bg-card rounded-xl p-6 metallic-border'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm text-foreground/60'>Total Users</p>
+              <p className='text-sm text-foreground/60'>Total Content</p>
               <p className='text-3xl font-bold text-foreground mt-1'>
-                {dashboardStats.totalUsers}
+                {totalProjects + totalStories}
               </p>
             </div>
             <div className='w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center'>
@@ -189,7 +182,7 @@ export default function AdminDashboard() {
           </div>
           <div className='mt-4 flex items-center text-sm text-foreground/60'>
             <TrendingUp className='w-4 h-4 mr-1' />
-            <span>+2 this month</span>
+            <span>Projects + Stories</span>
           </div>
         </div>
       </div>
@@ -199,7 +192,9 @@ export default function AdminDashboard() {
         {/* Recent Projects */}
         <div className='bg-card rounded-xl p-6 metallic-border'>
           <div className='flex items-center justify-between mb-6'>
-            <h2 className='text-xl font-bold text-foreground'>Recent Projects</h2>
+            <h2 className='text-xl font-bold text-foreground'>
+              Recent Projects
+            </h2>
             <Link
               href='/admin/projects'
               className='text-primary hover:text-primary/80 font-medium text-sm'
@@ -208,9 +203,9 @@ export default function AdminDashboard() {
             </Link>
           </div>
           <div className='space-y-4'>
-            {dashboardStats.recentProjects.map((project) => (
+            {projects?.slice(0, 3).map((project) => (
               <div
-                key={project.id}
+                key={project._id}
                 className='flex items-center justify-between p-4 bg-background rounded-lg'
               >
                 <div className='flex-1'>
@@ -222,29 +217,36 @@ export default function AdminDashboard() {
                       className={`px-2 py-1 rounded-full text-xs ${
                         project.status === 'Published'
                           ? 'bg-primary/20 text-primary'
-                          : 'bg-accent/20 text-accent'
+                          : project.status === 'In Review'
+                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
                       }`}
                     >
                       {project.status}
                     </span>
                     <div className='flex items-center space-x-1'>
-                      <Calendar className='w-3 h-3' />
-                      <span>{project.date}</span>
+                      <MapPin className='w-3 h-3' />
+                      <span>{project.location}</span>
                     </div>
                     <div className='flex items-center space-x-1'>
-                      <Eye className='w-3 h-3' />
-                      <span>{project.views} views</span>
+                      <Building2 className='w-3 h-3' />
+                      <span>{project.category}</span>
                     </div>
                   </div>
                 </div>
                 <div className='flex items-center space-x-2'>
                   <Link
-                    href={`/admin/projects/${project.id}/edit`}
+                    href={`/admin/projects/${project._id}/edit`}
                     className='p-2 rounded-lg hover:bg-secondary transition-colors'
                   >
                     <Edit className='w-4 h-4 text-foreground/60' />
                   </Link>
-                  <button className='p-2 rounded-lg hover:bg-secondary transition-colors'>
+                  <button
+                    onClick={() =>
+                      handleDeleteClick('project', project._id, project.title)
+                    }
+                    className='p-2 rounded-lg hover:bg-secondary transition-colors'
+                  >
                     <Trash2 className='w-4 h-4 text-foreground/60' />
                   </button>
                 </div>
@@ -267,9 +269,9 @@ export default function AdminDashboard() {
             </Link>
           </div>
           <div className='space-y-4'>
-            {dashboardStats.recentStories.map((story) => (
+            {businessStories?.slice(0, 3).map((story) => (
               <div
-                key={story.id}
+                key={story._id}
                 className='flex items-center justify-between p-4 bg-background rounded-lg'
               >
                 <div className='flex-1'>
@@ -284,29 +286,36 @@ export default function AdminDashboard() {
                       className={`px-2 py-1 rounded-full text-xs ${
                         story.status === 'Published'
                           ? 'bg-primary/20 text-primary'
-                          : 'bg-accent/20 text-accent'
+                          : story.status === 'In Review'
+                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
                       }`}
                     >
                       {story.status}
                     </span>
                     <div className='flex items-center space-x-1'>
-                      <Calendar className='w-3 h-3' />
-                      <span>{story.date}</span>
+                      <MapPin className='w-3 h-3' />
+                      <span>{story.location}</span>
                     </div>
                     <div className='flex items-center space-x-1'>
-                      <Eye className='w-3 h-3' />
-                      <span>{story.views} views</span>
+                      <Video className='w-3 h-3' />
+                      <span>{story.category}</span>
                     </div>
                   </div>
                 </div>
                 <div className='flex items-center space-x-2'>
                   <Link
-                    href={`/admin/business-stories/${story.id}/edit`}
+                    href={`/admin/business-stories/${story._id}/edit`}
                     className='p-2 rounded-lg hover:bg-secondary transition-colors'
                   >
                     <Edit className='w-4 h-4 text-foreground/60' />
                   </Link>
-                  <button className='p-2 rounded-lg hover:bg-secondary transition-colors'>
+                  <button
+                    onClick={() =>
+                      handleDeleteClick('story', story._id, story.title)
+                    }
+                    className='p-2 rounded-lg hover:bg-secondary transition-colors'
+                  >
                     <Trash2 className='w-4 h-4 text-foreground/60' />
                   </button>
                 </div>
@@ -316,45 +325,18 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className='bg-card rounded-xl p-6 metallic-border'>
-        <h2 className='text-xl font-bold text-foreground mb-6'>
-          Recent Activity
-        </h2>
-        <div className='space-y-4'>
-          {dashboardStats.recentActivity.map((activity) => (
-            <div
-              key={activity.id}
-              className='flex items-center space-x-4 p-4 bg-background rounded-lg'
-            >
-              <div
-                className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  activity.type === 'project'
-                    ? 'bg-primary/20'
-                    : activity.type === 'story'
-                    ? 'bg-accent/20'
-                    : 'bg-secondary'
-                }`}
-              >
-                {activity.type === 'project' ? (
-                  <Building2 className='w-5 h-5 text-primary' />
-                ) : activity.type === 'story' ? (
-                  <Video className='w-5 h-5 text-accent' />
-                ) : (
-                  <Image className='w-5 h-5 text-foreground/60' />
-                )}
-              </div>
-              <div className='flex-1'>
-                <p className='text-foreground'>
-                  <span className='font-semibold'>{activity.user}</span>{' '}
-                  {activity.action} {activity.title}
-                </p>
-                <p className='text-sm text-foreground/60'>{activity.time}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmation
+        isOpen={deleteModal.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title={`Delete ${
+          deleteModal.type === 'project' ? 'Project' : 'Business Story'
+        }`}
+        description={`Are you sure you want to delete this ${deleteModal.type}? This action cannot be undone and will permanently remove all data, including media files and content.`}
+        itemName={deleteModal.title}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

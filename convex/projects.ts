@@ -36,6 +36,8 @@ export const create = mutation({
     status: v.union(
       v.literal('Draft'),
       v.literal('In Review'),
+      v.literal('Archived'),
+      v.literal('In Progress'),
       v.literal('Published')
     ),
     budget: v.optional(v.string()),
@@ -81,6 +83,8 @@ export const update = mutation({
       v.union(
         v.literal('Draft'),
         v.literal('In Review'),
+        v.literal('Archived'),
+        v.literal('In Progress'),
         v.literal('Published')
       )
     ),

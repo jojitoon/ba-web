@@ -4,6 +4,8 @@ import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useQuery } from 'convex/react';
+import { api } from 'convex/_generated/api';
 import {
   Play,
   Clock,
@@ -18,157 +20,24 @@ import {
   ExternalLink,
 } from 'lucide-react';
 
-// Mock data - in a real app, this would come from an API
-const businessStories = {
-  1: {
-    id: 1,
-    title: 'The Family Bakery',
-    business: "Mama Rosa's Bakery",
-    location: 'Brooklyn, NY',
-    duration: '45 min',
-    rating: 4.9,
-    year: '2024',
-    founded: '1952',
-    employees: '12',
-    category: 'Food & Beverage',
-    description:
-      'Three generations of bakers preserving traditional recipes while embracing modern innovation.',
-    fullDescription: `Mama Rosa's Bakery has been a cornerstone of the Brooklyn community for over 70 years. Founded by Rosa Martinez in 1952, this family business has weathered economic storms, neighborhood changes, and the challenges of modern competition while maintaining its commitment to authentic, handcrafted baked goods.
-
-The documentary follows the Martinez family through their daily operations, from the pre-dawn hours when the ovens are fired up, to the evening when the last customer leaves with a warm loaf of bread. We meet Rosa's daughter Maria, who took over in 1985, and her son Carlos, who represents the third generation and brings modern business practices while honoring traditional methods.
-
-Through intimate interviews and behind-the-scenes footage, we discover how this small bakery has become more than just a business - it's a gathering place for the community, a keeper of cultural traditions, and a testament to the power of family and perseverance.`,
-    videoUrl: '/api/placeholder/video',
-    images: [
-      '/api/placeholder/800/600',
-      '/api/placeholder/800/600',
-      '/api/placeholder/800/600',
-      '/api/placeholder/800/600',
-    ],
-    milestones: [
-      {
-        year: '1952',
-        title: 'Bakery Founded',
-        description:
-          "Rosa Martinez opens Mama Rosa's Bakery with a small loan and big dreams.",
-      },
-      {
-        year: '1985',
-        title: 'Second Generation',
-        description:
-          'Maria Martinez takes over the business, expanding the menu and modernizing operations.',
-      },
-      {
-        year: '2010',
-        title: 'Third Generation',
-        description:
-          'Carlos Martinez joins the business, bringing digital marketing and online ordering.',
-      },
-      {
-        year: '2024',
-        title: 'Documentary Release',
-        description:
-          'Built Ancestry documents the family story for future generations.',
-      },
-    ],
-    testimonials: [
-      {
-        name: 'Sarah Johnson',
-        role: 'Regular Customer',
-        content:
-          "I've been coming to Mama Rosa's since I was a child. The bread is amazing, but it's the family atmosphere that keeps me coming back.",
-      },
-      {
-        name: 'Michael Chen',
-        role: 'Local Business Owner',
-        content:
-          "Mama Rosa's is more than a bakery - it's the heart of our neighborhood. They support local events and always give back to the community.",
-      },
-    ],
-    qrCode: '/api/placeholder/qr-code',
-    supportLinks: {
-      website: 'https://mamarosasbakery.com',
-      phone: '(555) 123-4567',
-      address: '123 Main Street, Brooklyn, NY 11201',
-    },
-  },
-  2: {
-    id: 2,
-    title: 'The Corner Hardware Store',
-    business: "Johnson's Hardware",
-    location: 'Austin, TX',
-    duration: '38 min',
-    rating: 4.8,
-    year: '2024',
-    founded: '1978',
-    employees: '8',
-    category: 'Retail',
-    description:
-      'From fixing leaky faucets to building communities - the story of a neighborhood institution.',
-    fullDescription: `Johnson's Hardware has been serving the Austin community for over 45 years. What started as a small family business has become an essential part of the neighborhood, known not just for its extensive inventory of tools and supplies, but for the personal service and expertise that owner Tom Johnson and his team provide.
-
-The documentary explores how this traditional hardware store has adapted to the digital age while maintaining its old-fashioned values. From helping customers with DIY projects to supporting local contractors, Johnson's Hardware represents the kind of community-focused business that makes neighborhoods thrive.
-
-Through interviews with long-time customers, employees, and the Johnson family, we learn about the challenges of running a small business in an era of big-box stores and online shopping, and how personal relationships and local knowledge continue to be their greatest assets.`,
-    videoUrl: '/api/placeholder/video',
-    images: [
-      '/api/placeholder/800/600',
-      '/api/placeholder/800/600',
-      '/api/placeholder/800/600',
-    ],
-    milestones: [
-      {
-        year: '1978',
-        title: 'Store Opens',
-        description:
-          'Tom Johnson opens the hardware store with a focus on personal service.',
-      },
-      {
-        year: '1995',
-        title: 'Expansion',
-        description:
-          'The store expands to include a larger showroom and more inventory.',
-      },
-      {
-        year: '2015',
-        title: 'Digital Integration',
-        description:
-          'Online ordering and inventory management systems are introduced.',
-      },
-      {
-        year: '2024',
-        title: 'Documentary',
-        description:
-          'The Johnson family story is preserved for future generations.',
-      },
-    ],
-    testimonials: [
-      {
-        name: 'Lisa Rodriguez',
-        role: 'Homeowner',
-        content:
-          'Tom and his team have helped me with countless home improvement projects. Their knowledge and patience are unmatched.',
-      },
-      {
-        name: 'David Park',
-        role: 'Contractor',
-        content:
-          "Johnson's Hardware is my go-to supplier. They always have what I need, and if they don't, they'll get it for me.",
-      },
-    ],
-    qrCode: '/api/placeholder/qr-code',
-    supportLinks: {
-      website: 'https://johnsonshardware.com',
-      phone: '(555) 234-5678',
-      address: '456 Oak Street, Austin, TX 78701',
-    },
-  },
-};
-
 export default function BusinessStoryPage() {
   const params = useParams();
   const storyId = params.id as string;
-  const story = businessStories[storyId as keyof typeof businessStories];
+
+  const story = useQuery(api.businessStories.get, { id: storyId as any });
+
+  if (story === undefined) {
+    return (
+      <div className='min-h-screen bg-background'>
+        <Navigation />
+        <div className='pt-20 pb-16 text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4'></div>
+          <p className='text-foreground/70'>Loading business story...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!story) {
     return (
@@ -220,7 +89,7 @@ export default function BusinessStoryPage() {
                 <div className='flex items-center space-x-1'>
                   <Star className='w-4 h-4 text-primary fill-current' />
                   <span className='text-sm text-foreground/70'>
-                    {story.rating}
+                    {story.rating || 'N/A'}
                   </span>
                 </div>
               </div>
@@ -240,11 +109,11 @@ export default function BusinessStoryPage() {
                 </div>
                 <div className='flex items-center space-x-2'>
                   <Calendar className='w-4 h-4' />
-                  <span>Founded {story.founded}</span>
+                  <span>Founded {story.founded || 'N/A'}</span>
                 </div>
                 <div className='flex items-center space-x-2'>
                   <Users className='w-4 h-4' />
-                  <span>{story.employees} employees</span>
+                  <span>{story.employees || 'N/A'} employees</span>
                 </div>
               </div>
 
@@ -279,9 +148,9 @@ export default function BusinessStoryPage() {
               <div className='flex items-center justify-between text-sm text-foreground/70'>
                 <div className='flex items-center space-x-2'>
                   <Clock className='w-4 h-4' />
-                  <span>{story.duration}</span>
+                  <span>{story.duration || 'N/A'}</span>
                 </div>
-                <span>{story.year}</span>
+                <span>{new Date(story.createdAt).getFullYear()}</span>
               </div>
             </div>
           </div>
@@ -313,33 +182,41 @@ export default function BusinessStoryPage() {
                 The Full Story
               </h2>
               <p className='text-lg text-foreground/80 leading-relaxed mb-8'>
-                {story.fullDescription}
+                {story.fullDescription || story.description}
               </p>
 
               <h3 className='text-2xl font-bold text-foreground mb-6'>
                 Timeline
               </h3>
               <div className='space-y-6'>
-                {story.milestones.map((milestone, index) => (
-                  <div key={index} className='flex items-start space-x-4'>
-                    <div className='w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0'>
-                      <Calendar className='w-6 h-6 text-primary' />
-                    </div>
-                    <div>
-                      <div className='flex items-center space-x-2 mb-2'>
-                        <span className='text-sm font-medium text-primary'>
-                          {milestone.year}
-                        </span>
-                        <span className='text-lg font-semibold text-foreground'>
-                          {milestone.title}
-                        </span>
+                {story.milestones && story.milestones.length > 0 ? (
+                  story.milestones.map((milestone, index) => (
+                    <div key={index} className='flex items-start space-x-4'>
+                      <div className='w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0'>
+                        <Calendar className='w-6 h-6 text-primary' />
                       </div>
-                      <p className='text-foreground/70'>
-                        {milestone.description}
-                      </p>
+                      <div>
+                        <div className='flex items-center space-x-2 mb-2'>
+                          <span className='text-sm font-medium text-primary'>
+                            {milestone.year}
+                          </span>
+                          <span className='text-lg font-semibold text-foreground'>
+                            {milestone.title}
+                          </span>
+                        </div>
+                        <p className='text-foreground/70'>
+                          {milestone.description}
+                        </p>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className='text-center py-8'>
+                    <p className='text-foreground/60 italic'>
+                      No timeline information available
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -348,24 +225,32 @@ export default function BusinessStoryPage() {
                 Customer Testimonials
               </h3>
               <div className='space-y-6'>
-                {story.testimonials.map((testimonial, index) => (
-                  <div
-                    key={index}
-                    className='bg-card rounded-lg p-6 metallic-border'
-                  >
-                    <p className='text-foreground/80 mb-4 leading-relaxed'>
-                      "{testimonial.content}"
-                    </p>
-                    <div>
-                      <h4 className='font-semibold text-foreground'>
-                        {testimonial.name}
-                      </h4>
-                      <p className='text-sm text-foreground/60'>
-                        {testimonial.role}
+                {story.testimonials && story.testimonials.length > 0 ? (
+                  story.testimonials.map((testimonial, index) => (
+                    <div
+                      key={index}
+                      className='bg-card rounded-lg p-6 metallic-border'
+                    >
+                      <p className='text-foreground/80 mb-4 leading-relaxed'>
+                        "{testimonial.content}"
                       </p>
+                      <div>
+                        <h4 className='font-semibold text-foreground'>
+                          {testimonial.name}
+                        </h4>
+                        <p className='text-sm text-foreground/60'>
+                          {testimonial.role}
+                        </p>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className='text-center py-8'>
+                    <p className='text-foreground/60 italic'>
+                      No testimonials available
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
@@ -379,16 +264,22 @@ export default function BusinessStoryPage() {
             Photo Gallery
           </h2>
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
-            {story.images.map((image, index) => (
-              <div
-                key={index}
-                className='bg-card rounded-lg overflow-hidden metallic-border'
-              >
-                <div className='w-full h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center'>
-                  <div className='text-foreground/50'>Photo {index + 1}</div>
+            {story.media.images && story.media.images.length > 0 ? (
+              story.media.images.map((image, index) => (
+                <div
+                  key={index}
+                  className='bg-card rounded-lg overflow-hidden metallic-border'
+                >
+                  <div className='w-full h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center'>
+                    <div className='text-foreground/50'>Photo {index + 1}</div>
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className='col-span-full text-center py-16'>
+                <p className='text-foreground/60 italic'>No photos available</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -411,14 +302,14 @@ export default function BusinessStoryPage() {
                 <MapPin className='w-8 h-8 text-primary mx-auto mb-3' />
                 <h3 className='font-semibold text-foreground mb-2'>Visit Us</h3>
                 <p className='text-sm text-foreground/70'>
-                  {story.supportLinks.address}
+                  {story.supportLinks.address || 'N/A'}
                 </p>
               </div>
               <div className='bg-background rounded-lg p-6'>
                 <ExternalLink className='w-8 h-8 text-accent mx-auto mb-3' />
                 <h3 className='font-semibold text-foreground mb-2'>Website</h3>
                 <a
-                  href={story.supportLinks.website}
+                  href={story.supportLinks.website || '#'}
                   className='text-sm text-accent hover:text-accent/80'
                 >
                   Visit Website
@@ -428,10 +319,10 @@ export default function BusinessStoryPage() {
                 <Users className='w-8 h-8 text-primary mx-auto mb-3' />
                 <h3 className='font-semibold text-foreground mb-2'>Call Us</h3>
                 <a
-                  href={`tel:${story.supportLinks.phone}`}
+                  href={`tel:${story.supportLinks.phone || ''}`}
                   className='text-sm text-foreground/70 hover:text-primary'
                 >
-                  {story.supportLinks.phone}
+                  {story.supportLinks.phone || 'N/A'}
                 </a>
               </div>
             </div>

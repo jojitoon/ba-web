@@ -1,5 +1,6 @@
 'use client';
 
+import { useQuery, useMutation } from 'convex/react';
 import Link from 'next/link';
 import { useState } from 'react';
 import {
@@ -13,103 +14,16 @@ import {
   Eye,
   Calendar,
   MapPin,
-  Users,
-  DollarSign,
 } from 'lucide-react';
-
-// Mock data - in a real app, this would come from Convex
-const projects = [
-  {
-    id: 1,
-    title: 'Downtown Office Complex',
-    location: 'New York, NY',
-    status: 'Published',
-    category: 'Commercial',
-    budget: '$850M',
-    timeline: '24 months',
-    team: '150+ workers',
-    date: '2024-01-15',
-    views: 1247,
-    images: 45,
-    videos: 8,
-  },
-  {
-    id: 2,
-    title: 'Residential Tower',
-    location: 'Los Angeles, CA',
-    status: 'Draft',
-    category: 'Residential',
-    budget: '$450M',
-    timeline: '18 months',
-    team: '200+ workers',
-    date: '2024-01-14',
-    views: 0,
-    images: 23,
-    videos: 3,
-  },
-  {
-    id: 3,
-    title: 'Industrial Facility',
-    location: 'Houston, TX',
-    status: 'Published',
-    category: 'Industrial',
-    budget: '$320M',
-    timeline: '36 months',
-    team: '300+ workers',
-    date: '2024-01-12',
-    views: 892,
-    images: 67,
-    videos: 12,
-  },
-  {
-    id: 4,
-    title: 'Hospital Expansion',
-    location: 'Chicago, IL',
-    status: 'In Review',
-    category: 'Healthcare',
-    budget: '$680M',
-    timeline: '30 months',
-    team: '250+ workers',
-    date: '2024-01-10',
-    views: 0,
-    images: 34,
-    videos: 6,
-  },
-  {
-    id: 5,
-    title: 'University Campus',
-    location: 'Boston, MA',
-    status: 'Published',
-    category: 'Education',
-    budget: '$520M',
-    timeline: '42 months',
-    team: '400+ workers',
-    date: '2024-01-08',
-    views: 1567,
-    images: 89,
-    videos: 15,
-  },
-  {
-    id: 6,
-    title: 'Retail Complex',
-    location: 'Miami, FL',
-    status: 'Draft',
-    category: 'Retail',
-    budget: '$280M',
-    timeline: '20 months',
-    team: '180+ workers',
-    date: '2024-01-05',
-    views: 0,
-    images: 12,
-    videos: 2,
-  },
-];
+import { api } from 'convex/_generated/api';
+import DeleteConfirmation from '@/components/delete-confirmation';
 
 const statusOptions = ['All', 'Published', 'Draft', 'In Review'];
 const categoryOptions = [
   'All',
   'Commercial',
   'Residential',
+  'Infrastructure',
   'Industrial',
   'Healthcare',
   'Education',
@@ -120,16 +34,58 @@ export default function AdminProjects() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');
-
-  const filteredProjects = projects.filter((project) => {
-    const matchesSearch =
-      project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'All' || project.status === statusFilter;
-    const matchesCategory =
-      categoryFilter === 'All' || project.category === categoryFilter;
-    return matchesSearch && matchesStatus && matchesCategory;
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    projectId: string | null;
+    projectTitle: string;
+  }>({
+    isOpen: false,
+    projectId: null,
+    projectTitle: '',
   });
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const projects = useQuery(api.projects.list, {
+    status: statusFilter !== 'All' ? statusFilter : undefined,
+    category: categoryFilter !== 'All' ? categoryFilter : undefined,
+  });
+
+  const deleteProject = useMutation(api.projects.deleteProject);
+
+  const filteredProjects =
+    projects?.filter((project) => {
+      const matchesSearch =
+        project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.location.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesSearch;
+    }) || [];
+
+  const handleDeleteClick = (projectId: string, projectTitle: string) => {
+    setDeleteModal({
+      isOpen: true,
+      projectId,
+      projectTitle,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.projectId) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteProject({ id: deleteModal.projectId as any });
+      setDeleteModal({ isOpen: false, projectId: null, projectTitle: '' });
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+      alert('Failed to delete project. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModal({ isOpen: false, projectId: null, projectTitle: '' });
+  };
 
   return (
     <div className='space-y-8'>
@@ -199,7 +155,7 @@ export default function AdminProjects() {
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
         {filteredProjects.map((project) => (
           <div
-            key={project.id}
+            key={project._id}
             className='bg-card rounded-xl overflow-hidden metallic-border hover:metallic-glow transition-all duration-300'
           >
             {/* Project Header */}
@@ -235,19 +191,27 @@ export default function AdminProjects() {
               <div className='grid grid-cols-2 gap-4 text-sm'>
                 <div>
                   <span className='text-foreground/60'>Category:</span>
-                  <p className='font-medium text-foreground'>{project.category}</p>
+                  <p className='font-medium text-foreground'>
+                    {project.category}
+                  </p>
                 </div>
                 <div>
                   <span className='text-foreground/60'>Budget:</span>
-                  <p className='font-medium text-foreground'>{project.budget}</p>
+                  <p className='font-medium text-foreground'>
+                    {project.budget || 'N/A'}
+                  </p>
                 </div>
                 <div>
                   <span className='text-foreground/60'>Timeline:</span>
-                  <p className='font-medium text-foreground'>{project.timeline}</p>
+                  <p className='font-medium text-foreground'>
+                    {project.timeline || 'N/A'}
+                  </p>
                 </div>
                 <div>
                   <span className='text-foreground/60'>Team:</span>
-                  <p className='font-medium text-foreground'>{project.team}</p>
+                  <p className='font-medium text-foreground'>
+                    {project.team || 'N/A'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -257,19 +221,19 @@ export default function AdminProjects() {
               <div className='grid grid-cols-3 gap-4 mb-4'>
                 <div className='text-center'>
                   <div className='text-2xl font-bold text-primary mb-1'>
-                    {project.views}
+                    {project.media.photos.length + project.media.videos.length}
                   </div>
-                  <div className='text-xs text-foreground/60'>Views</div>
+                  <div className='text-xs text-foreground/60'>Media</div>
                 </div>
                 <div className='text-center'>
                   <div className='text-2xl font-bold text-accent mb-1'>
-                    {project.images}
+                    {project.media.photos.length}
                   </div>
                   <div className='text-xs text-foreground/60'>Images</div>
                 </div>
                 <div className='text-center'>
                   <div className='text-2xl font-bold text-primary mb-1'>
-                    {project.videos}
+                    {project.media.videos.length}
                   </div>
                   <div className='text-xs text-foreground/60'>Videos</div>
                 </div>
@@ -278,27 +242,32 @@ export default function AdminProjects() {
               <div className='flex items-center justify-between text-sm text-foreground/60 mb-4'>
                 <div className='flex items-center space-x-1'>
                   <Calendar className='w-4 h-4' />
-                  <span>{project.date}</span>
+                  <span>
+                    {new Date(project.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
 
               {/* Actions */}
               <div className='flex items-center space-x-2'>
                 <Link
-                  href={`/projects/${project.id}`}
+                  href={`/projects/${project._id}`}
                   className='flex-1 bg-secondary text-foreground px-4 py-2 rounded-lg font-medium hover:bg-secondary/80 transition-colors flex items-center justify-center space-x-2'
                 >
                   <Eye className='w-4 h-4' />
                   <span>View</span>
                 </Link>
                 <Link
-                  href={`/admin/projects/${project.id}/edit`}
+                  href={`/admin/projects/${project._id}/edit`}
                   className='flex-1 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center space-x-2'
                 >
                   <Edit className='w-4 h-4' />
                   <span>Edit</span>
                 </Link>
-                <button className='p-2 rounded-lg hover:bg-secondary transition-colors'>
+                <button
+                  onClick={() => handleDeleteClick(project._id, project.title)}
+                  className='p-2 rounded-lg hover:bg-secondary transition-colors'
+                >
                   <Trash2 className='w-4 h-4 text-foreground/60' />
                 </button>
               </div>
@@ -326,6 +295,17 @@ export default function AdminProjects() {
           </Link>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmation
+        isOpen={deleteModal.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title='Delete Project'
+        description='Are you sure you want to delete this project? This action cannot be undone and will permanently remove all project data, including media files and timelines.'
+        itemName={deleteModal.projectTitle}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }
