@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { useQuery } from 'convex/react';
-import Navigation from '@/components/navigation';
-import HeroSection from '@/components/hero-section';
-import FeaturedProjects from '@/components/featured-projects';
-import FeaturedStories from '@/components/featured-stories';
-import Testimonials from '@/components/testimonials';
-import Footer from '@/components/footer';
-import { api } from 'convex/_generated/api';
+import { useQuery } from "convex/react";
+import Navigation from "@/components/navigation";
+import HeroSection from "@/components/hero-section";
+import FeaturedProjects from "@/components/featured-projects";
+import FeaturedStories from "@/components/featured-stories";
+import Testimonials from "@/components/testimonials";
+import Footer from "@/components/footer";
+import { api } from "convex/_generated/api";
 
 export default function Home() {
-  const projects = useQuery(api.projects.list, { status: 'Published' });
+  const projects = useQuery(api.projects.list, { status: "Published" });
   const businessStories = useQuery(api.businessStories.list, {
-    status: 'Published',
+    status: "Published",
   });
 
   return (
-    <div className='min-h-screen bg-background'>
+    <div className="min-h-screen bg-background">
       <Navigation />
       <HeroSection />
       <FeaturedProjects projects={projects || []} />
