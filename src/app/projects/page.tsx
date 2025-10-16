@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import Navigation from '@/components/navigation';
-import Footer from '@/components/footer';
-import Link from 'next/link';
-import { useQuery } from 'convex/react';
-import { api } from 'convex/_generated/api';
+import Navigation from "@/components/navigation";
+import Footer from "@/components/footer";
+import Link from "next/link";
+import { useQuery } from "convex/react";
+import { api } from "convex/_generated/api";
 import {
   Building2,
   Calendar,
@@ -12,29 +12,29 @@ import {
   ArrowRight,
   Filter,
   Search,
-} from 'lucide-react';
-import { useState } from 'react';
+} from "lucide-react";
+import { useState } from "react";
 
 const categories = [
-  'All',
-  'Commercial',
-  'Residential',
-  'Industrial',
-  'Healthcare',
-  'Education',
-  'Retail',
+  "All",
+  "Commercial",
+  "Residential",
+  "Industrial",
+  "Healthcare",
+  "Education",
+  "Retail",
 ];
 
 export default function ProjectsPage() {
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const projects = useQuery(api.projects.list, { status: 'Published' });
+  const projects = useQuery(api.projects.list, { status: "Published" });
 
   const filteredProjects =
     projects?.filter((project) => {
       const matchesCategory =
-        selectedCategory === 'All' || project.category === selectedCategory;
+        selectedCategory === "All" || project.category === selectedCategory;
       const matchesSearch =
         project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         project.location.toLowerCase().includes(searchTerm.toLowerCase());
@@ -43,11 +43,11 @@ export default function ProjectsPage() {
 
   if (projects === undefined) {
     return (
-      <div className='min-h-screen bg-background'>
+      <div className="min-h-screen bg-background">
         <Navigation />
-        <div className='pt-20 pb-16 text-center'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4'></div>
-          <p className='text-foreground/70'>Loading projects...</p>
+        <div className="pt-20 pb-16 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-foreground/70">Loading projects...</p>
         </div>
         <Footer />
       </div>
@@ -55,17 +55,17 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className='min-h-screen bg-background'>
+    <div className="min-h-screen pt-30 bg-background">
       <Navigation />
 
       {/* Page Header */}
-      <section className='pt-20 pb-16 bg-card/30'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='text-center mb-12'>
-            <h1 className='text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6'>
-              Construction <span className='text-primary'>Projects</span>
+      <section className="pt-20 pb-16 bg-card/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
+              Construction <span className="text-primary">Projects</span>
             </h1>
-            <p className='text-xl text-foreground/70 max-w-3xl mx-auto'>
+            <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
               Explore our comprehensive portfolio of documented construction
               projects, from groundbreaking to completion, showcasing the
               incredible work of construction teams across the nation.
@@ -73,24 +73,24 @@ export default function ProjectsPage() {
           </div>
 
           {/* Search and Filter */}
-          <div className='flex flex-col md:flex-row gap-4 justify-center items-center mb-8'>
-            <div className='relative'>
-              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground/50 w-5 h-5' />
+          <div className="flex flex-col md:flex-row gap-4 justify-center items-center mb-8">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground/50 w-5 h-5" />
               <input
-                type='text'
-                placeholder='Search projects...'
+                type="text"
+                placeholder="Search projects..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className='pl-10 pr-4 py-3 bg-card border border-border rounded-lg text-foreground placeholder-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-64'
+                className="pl-10 pr-4 py-3 bg-card border border-border rounded-lg text-foreground placeholder-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-64"
               />
             </div>
 
-            <div className='flex items-center space-x-2'>
-              <Filter className='w-5 h-5 text-foreground/50' />
+            <div className="flex items-center space-x-2">
+              <Filter className="w-5 h-5 text-foreground/50" />
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className='bg-card border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'
+                className="bg-card border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               >
                 {categories.map((category) => (
                   <option key={category} value={category}>
@@ -102,62 +102,62 @@ export default function ProjectsPage() {
           </div>
 
           {/* Stats */}
-          <div className='grid grid-cols-1 sm:grid-cols-4 gap-6 text-center'>
-            <div className='bg-card/50 rounded-lg p-4 metallic-border'>
-              <div className='text-2xl font-bold text-primary mb-1'>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 text-center">
+            <div className="bg-card/50 rounded-lg p-4 metallic-border">
+              <div className="text-2xl font-bold text-primary mb-1">
                 {projects?.length || 0}
               </div>
-              <div className='text-foreground/70 text-sm'>Total Projects</div>
+              <div className="text-foreground/70 text-sm">Total Projects</div>
             </div>
-            <div className='bg-card/50 rounded-lg p-4 metallic-border'>
-              <div className='text-2xl font-bold text-accent mb-1'>
-                {projects?.filter((p) => p.status === 'Published').length || 0}
+            <div className="bg-card/50 rounded-lg p-4 metallic-border">
+              <div className="text-2xl font-bold text-accent mb-1">
+                {projects?.filter((p) => p.status === "Published").length || 0}
               </div>
-              <div className='text-foreground/70 text-sm'>Published</div>
+              <div className="text-foreground/70 text-sm">Published</div>
             </div>
-            <div className='bg-card/50 rounded-lg p-4 metallic-border'>
-              <div className='text-2xl font-bold text-primary mb-1'>
-                {projects?.filter((p) => p.status === 'In Review').length || 0}
+            <div className="bg-card/50 rounded-lg p-4 metallic-border">
+              <div className="text-2xl font-bold text-primary mb-1">
+                {projects?.filter((p) => p.status === "In Review").length || 0}
               </div>
-              <div className='text-foreground/70 text-sm'>In Review</div>
+              <div className="text-foreground/70 text-sm">In Review</div>
             </div>
-            <div className='bg-card/50 rounded-lg p-4 metallic-border'>
-              <div className='text-2xl font-bold text-accent mb-1'>
+            <div className="bg-card/50 rounded-lg p-4 metallic-border">
+              <div className="text-2xl font-bold text-accent mb-1">
                 {
                   new Set(
-                    projects?.map((p) => p.location.split(',')[1]?.trim()) || []
+                    projects?.map((p) => p.location.split(",")[1]?.trim()) || []
                   ).size
                 }
               </div>
-              <div className='text-foreground/70 text-sm'>Cities</div>
+              <div className="text-foreground/70 text-sm">Cities</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Projects Grid */}
-      <section className='py-16'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProjects.map((project) => (
               <div
                 key={project._id}
-                className='group bg-card rounded-xl overflow-hidden metallic-border hover:metallic-glow transition-all duration-300'
+                className="group bg-card rounded-xl overflow-hidden metallic-border hover:metallic-glow transition-all duration-300"
               >
                 {/* Project Image */}
-                <div className='relative h-64 overflow-hidden'>
-                  <div className='w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center'>
-                    <Building2 className='w-16 h-16 text-primary/50' />
+                <div className="relative h-64 overflow-hidden">
+                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                    <Building2 className="w-16 h-16 text-primary/50" />
                   </div>
-                  <div className='absolute inset-0 bg-gradient-to-t from-background/80 to-transparent'></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent"></div>
 
                   {/* Status Badge */}
-                  <div className='absolute top-4 right-4'>
+                  <div className="absolute top-4 right-4">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        project.status === 'Published'
-                          ? 'bg-primary/20 text-primary'
-                          : 'bg-accent/20 text-accent'
+                        project.status === "Published"
+                          ? "bg-primary/20 text-primary"
+                          : "bg-accent/20 text-accent"
                       }`}
                     >
                       {project.status}
@@ -165,50 +165,50 @@ export default function ProjectsPage() {
                   </div>
 
                   {/* Project Info */}
-                  <div className='absolute bottom-4 left-4 right-4'>
-                    <div className='flex items-center justify-between'>
-                      <span className='text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full'>
-                        {project.timeline || 'Ongoing'}
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">
+                        {project.timeline || "Ongoing"}
                       </span>
-                      <span className='text-sm text-foreground/70'>
-                        {project.team || 'Professional Team'}
+                      <span className="text-sm text-foreground/70">
+                        {project.team || "Professional Team"}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Project Content */}
-                <div className='p-6'>
-                  <div className='flex items-center justify-between mb-2'>
-                    <span className='text-xs text-accent bg-accent/10 px-2 py-1 rounded'>
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-accent bg-accent/10 px-2 py-1 rounded">
                       {project.category}
                     </span>
-                    <div className='flex items-center space-x-2 text-sm text-foreground/60'>
-                      <MapPin className='w-4 h-4' />
+                    <div className="flex items-center space-x-2 text-sm text-foreground/60">
+                      <MapPin className="w-4 h-4" />
                       <span>{project.location}</span>
                     </div>
                   </div>
 
-                  <h3 className='text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors'>
+                  <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
                     {project.title}
                   </h3>
 
-                  <p className='text-foreground/70 mb-4 line-clamp-3'>
+                  <p className="text-foreground/70 mb-4 line-clamp-3">
                     {project.description}
                   </p>
 
-                  <div className='flex items-center justify-between'>
-                    <div className='flex items-center space-x-2 text-sm text-foreground/60'>
-                      <Calendar className='w-4 h-4' />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2 text-sm text-foreground/60">
+                      <Calendar className="w-4 h-4" />
                       <span>{new Date(project.createdAt).getFullYear()}</span>
                     </div>
 
                     <Link
                       href={`/projects/${project._id}`}
-                      className='inline-flex items-center space-x-2 text-primary hover:text-primary/80 font-medium transition-colors'
+                      className="inline-flex items-center space-x-2 text-primary hover:text-primary/80 font-medium transition-colors"
                     >
                       <span>View Timeline</span>
-                      <ArrowRight className='w-4 h-4 group-hover:translate-x-1 transition-transform' />
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </div>
                 </div>
@@ -217,12 +217,12 @@ export default function ProjectsPage() {
           </div>
 
           {filteredProjects.length === 0 && (
-            <div className='text-center py-16'>
-              <Building2 className='w-16 h-16 text-foreground/30 mx-auto mb-4' />
-              <h3 className='text-xl font-semibold text-foreground/70 mb-2'>
+            <div className="text-center py-16">
+              <Building2 className="w-16 h-16 text-foreground/30 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-foreground/70 mb-2">
                 No projects found
               </h3>
-              <p className='text-foreground/50'>
+              <p className="text-foreground/50">
                 Try adjusting your search or filter criteria.
               </p>
             </div>
