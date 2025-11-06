@@ -116,10 +116,57 @@ export const update = mutation({
   },
 });
 
-export const deleteProject = mutation({
+export const getByIdWithMedia = query({
   args: { id: v.id("projects") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.id);
+    const project = await ctx.db.get(args.id);
+    if (!project) return null;
+
+    const mediaItems = await ctx.db
+      .query("media")
+      .filter((q) => q.eq(q.field("projectId"), args.id))
+      .collect();
+
+    const images: any[] = [];
+    const videos: any[] = [];
+
+    for (const media of mediaItems) {
+      if (media.type === "image") {
+        const url = await ctx.storage.getUrl(media.storageId as any);
+        images.push({
+          _id: media._id,
+          url,
+          filename: media.filename,
+          storageId: media.storageId,
+        });
+      } else if (media.type === "video") {
+        const playbackUrl = media.muxPlaybackId
+          ? `https://stream.mux.com/${media.muxPlaybackId}.m3u8`
+          : null;
+
+        const thumbnailUrl = media.thumbnailUrl
+          ? media.thumbnailUrl
+          : media.muxPlaybackId
+          ? `https://image.mux.com/${media.muxPlaybackId}/thumbnail.png?width=400&height=225`
+          : null;
+
+        videos.push({
+          _id: media._id,
+          filename: media.filename,
+          muxAssetId: media.muxAssetId,
+          playbackUrl,
+          thumbnailUrl,
+        });
+      }
+    }
+
+    return {
+      ...project,
+      media: {
+        images,
+        videos,
+      },
+    };
   },
 });
 

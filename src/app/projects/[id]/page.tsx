@@ -18,13 +18,18 @@ import {
   Play,
   CheckCircle,
 } from "lucide-react";
+import MuxVideoPlayer from "@/components/mux-video-player";
 
 export default function ProjectPage() {
   const params = useParams();
   const projectId = params.id as string;
 
-  const project = useQuery(api.projects.get, { id: projectId as any });
-  console.log("project", project);
+  const project = useQuery(api.projects.getByIdWithMedia, {
+    id: projectId as any,
+  });
+
+  console.log("project:", project);
+
   if (project === undefined) {
     return (
       <div className="min-h-screen bg-background">
@@ -66,7 +71,6 @@ export default function ProjectPage() {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      {/* Hero Section */}
       <section className="pt-20 pb-16 bg-card/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
@@ -138,10 +142,27 @@ export default function ProjectPage() {
             </div>
 
             <div className="bg-card rounded-xl p-4 sm:p-8 metallic-border">
-              <div className="w-full h-64 sm:h-96 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
-                <Building2 className="w-16 h-16 sm:w-20 sm:h-20 text-primary/50" />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
+              {project.media.videos && project.media.videos.length > 0 ? (
+                project.media.videos.map((video, index) => (
+                  <div key={index} className="rounded-xl">
+                    <MuxVideoPlayer
+                      playbackId={
+                        video.playbackUrl
+                          ?.split("/")[3]
+                          ?.replace(".m3u8", "") || ""
+                      }
+                      title={project.title}
+                      poster={video.thumbnailUrl}
+                      className="w-full h-96"
+                    />
+                  </div>
+                ))
+              ) : (
+                <div className="w-full h-96 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center">
+                  <Building2 className="w-16 h-16 sm:w-20 sm:h-20 text-primary/50" />
+                </div>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm mt-4 sm:mt-6">
                 <div>
                   <span className="text-foreground/60">Timeline:</span>
                   <p className="font-semibold text-foreground">
@@ -172,7 +193,6 @@ export default function ProjectPage() {
         </div>
       </section>
 
-      {/* Project Overview */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -270,7 +290,6 @@ export default function ProjectPage() {
         </div>
       </section>
 
-      {/* Construction Timeline */}
       <section className="py-16 bg-card/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-foreground mb-12 text-center">
@@ -345,7 +364,6 @@ export default function ProjectPage() {
         </div>
       </section>
 
-      {/* Team Interviews */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-foreground mb-12 text-center">
@@ -382,26 +400,26 @@ export default function ProjectPage() {
         </div>
       </section>
 
-      {/* Media Gallery */}
       <section className="py-16 bg-card/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-foreground mb-8 text-center">
             Project Gallery
           </h2>
 
-          {/* Photos */}
           <div className="mb-12">
             <h3 className="text-2xl font-bold text-foreground mb-6">Photos</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {project.media.photos && project.media.photos.length > 0 ? (
-                project.media.photos.map((photo: string, index: number) => (
+              {project.media.images && project.media.images.length > 0 ? (
+                project.media.images.map((image, index) => (
                   <div
                     key={index}
                     className="bg-card rounded-lg overflow-hidden metallic-border"
                   >
-                    <div className="w-full h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                      <Camera className="w-12 h-12 text-primary/50" />
-                    </div>
+                    <img
+                      src={image.url}
+                      alt={image.filename || `Photo ${index + 1}`}
+                      className="w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
+                    />
                   </div>
                 ))
               ) : (
@@ -414,25 +432,40 @@ export default function ProjectPage() {
             </div>
           </div>
 
-          {/* Videos */}
           <div>
             <h3 className="text-2xl font-bold text-foreground mb-6">Videos</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {project.media.videos && project.media.videos.length > 0 ? (
-                project.media.videos.map((video: string, index: number) => (
+                project.media.videos.map((video, index) => (
                   <div
                     key={index}
                     className="bg-card rounded-lg overflow-hidden metallic-border"
                   >
-                    <div className="w-full h-48 bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center relative">
-                      <div className="w-16 h-16 bg-accent/90 rounded-full flex items-center justify-center">
-                        <Play className="w-8 h-8 text-accent-foreground ml-1" />
+                    {video.playbackUrl ? (
+                      <MuxVideoPlayer
+                        playbackId={
+                          video.playbackUrl
+                            ?.split("/")[3]
+                            ?.replace(".m3u8", "") || ""
+                        }
+                        title={video.filename}
+                        poster={video.thumbnailUrl}
+                        className="w-full h-48"
+                      />
+                    ) : (
+                      <div className="w-full h-48 bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center relative">
+                        <div className="w-16 h-16 bg-accent/90 rounded-full flex items-center justify-center">
+                          <Play className="w-8 h-8 text-accent-foreground ml-1" />
+                        </div>
                       </div>
-                    </div>
+                    )}
                     <div className="p-4">
-                      <h4 className="font-semibold text-foreground">
-                        Video {index + 1}
+                      <h4 className="font-semibold text-foreground text-sm truncate">
+                        {video.filename}
                       </h4>
+                      <p className="text-xs text-foreground/60 mt-1">
+                        {video.playbackUrl ? "Processing..." : "Uploading..."}
+                      </p>
                     </div>
                   </div>
                 ))

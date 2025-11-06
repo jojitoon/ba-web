@@ -1,5 +1,5 @@
 "use client";
-
+import type { Id } from "convex/_generated/dataModel";
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation } from "convex/react";
@@ -29,7 +29,8 @@ export default function NewProject() {
     ],
   });
 
-  const [uploadedMediaIds, setUploadedMediaIds] = useState<string[]>([]);
+  const [uploadedMediaIds, setUploadedMediaIds] = useState<Id<"media">[]>([]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const createProject = useMutation(api.projects.create);
@@ -97,7 +98,7 @@ export default function NewProject() {
     }));
   };
 
-  const handleMediaUploadComplete = (mediaIds: string[]) => {
+  const handleMediaUploadComplete = (mediaIds: Id<"media">[]) => {
     setUploadedMediaIds((prev) => [...prev, ...mediaIds]);
   };
 

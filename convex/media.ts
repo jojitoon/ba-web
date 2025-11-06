@@ -123,19 +123,22 @@ export const saveMuxMedia = mutation({
     filename: v.string(),
     uploadId: v.string(),
     size: v.optional(v.number()),
+    projectId: v.optional(v.id("projects")),
+    storyId: v.optional(v.id("businessStories")),
   },
   handler: async (ctx, args) => {
     const mediaId = await ctx.db.insert("media", {
       filename: args.filename,
       uploadId: args.uploadId,
+      projectId: args.projectId,
+      storyId: args.storyId,
+      storageId: "",
       type: "video",
       mimeType: "video/mp4",
       size: args.size ?? 0,
       uploadedAt: Date.now(),
-      storageId: "",
-      projectId: undefined,
-      storyId: undefined,
     });
+
     return mediaId;
   },
 });
@@ -176,34 +179,12 @@ export const bulkUpdateMediaStoryId = mutation({
 
 export const bulkUpdateMediaProjectId = mutation({
   args: {
-    mediaIds: v.array(v.string()),
+    mediaIds: v.array(v.id("media")),
     projectId: v.id("projects"),
   },
   handler: async (ctx, { mediaIds, projectId }) => {
-    if (mediaIds.length === 0) return;
-
-    const mediaList = await ctx.db
-      .query("media")
-      .filter((q) => {
-        let filter = q.or(
-          q.eq(q.field("_id"), mediaIds[0]),
-          q.eq(q.field("storageId"), mediaIds[0]),
-          q.eq(q.field("muxAssetId"), mediaIds[0])
-        );
-        for (let i = 1; i < mediaIds.length; i++) {
-          filter = q.or(
-            filter,
-            q.eq(q.field("_id"), mediaIds[i]),
-            q.eq(q.field("storageId"), mediaIds[i]),
-            q.eq(q.field("muxAssetId"), mediaIds[i])
-          );
-        }
-        return filter;
-      })
-      .collect();
-
-    for (const media of mediaList) {
-      await ctx.db.patch(media._id, { projectId });
+    for (const id of mediaIds) {
+      await ctx.db.patch(id, { projectId });
     }
   },
 });

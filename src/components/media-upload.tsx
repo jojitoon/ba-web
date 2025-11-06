@@ -17,7 +17,7 @@ import {
 interface MediaUploadProps {
   projectId?: Id<"projects">;
   storyId?: Id<"businessStories">;
-  onUploadComplete?: (mediaIds: string[]) => void;
+  onUploadComplete?: (mediaIds: Id<"media">[]) => void;
   accept?: string;
   maxFiles?: number;
 }
@@ -176,8 +176,8 @@ export default function MediaUpload({
         );
 
         const mediaIds = results
-          .map((r) => (r.type === "image" ? r.storageId : r.muxAssetId))
-          .filter(Boolean) as string[];
+          .map((r) => r.mediaId)
+          .filter(Boolean) as Id<"media">[];
 
         onUploadComplete?.(mediaIds);
       } catch (error) {
