@@ -19,6 +19,7 @@ import {
   Star,
   Clock,
 } from "lucide-react";
+import DeleteConfirmation from "@/components/delete-confirmation";
 
 const statusOptions = ["All", "Published", "Draft", "In Review"];
 const categoryOptions = [
@@ -34,6 +35,16 @@ export default function AdminBusinessStories() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    storyId: string | null;
+    storyTitle: string;
+  }>({
+    isOpen: false,
+    storyId: null,
+    storyTitle: "",
+  });
+  const [isDeleting, setIsDeleting] = useState(false);
   const stories = useQuery(api.businessStories.list, {});
   const deleteStory = useMutation(api.businessStories.deleteStory);
 
@@ -49,9 +60,33 @@ export default function AdminBusinessStories() {
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
-  const handleDeleteStory = async (storyId: string) => {
-    await deleteStory({ id: storyId as any });
-    window.location.href = "/admin/business-stories";
+  const handleDeleteClick = (storyId: string, storyTitle: string) => {
+    setDeleteModal({
+      isOpen: true,
+      storyId,
+      storyTitle,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.storyId) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteStory({ id: deleteModal.storyId as any });
+      setDeleteModal({ isOpen: false, storyId: null, storyTitle: "" });
+      // Optionally refresh the page or update the list
+      window.location.href = "/admin/business-stories";
+    } catch (error) {
+      console.error("Failed to delete story:", error);
+      alert("Failed to delete story. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModal({ isOpen: false, storyId: null, storyTitle: "" });
   };
 
   return (
@@ -249,7 +284,7 @@ export default function AdminBusinessStories() {
                 </Link>
                 <button
                   className="p-2 rounded-lg hover:bg-secondary transition-colors"
-                  onClick={() => handleDeleteStory(story._id)}
+                  onClick={() => handleDeleteClick(story._id, story.title)}
                 >
                   <Trash2 className="w-4 h-4 text-foreground/60" />
                 </button>
@@ -278,6 +313,17 @@ export default function AdminBusinessStories() {
           </Link>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmation
+        isOpen={deleteModal.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Business Story"
+        description="Are you sure you want to delete this business story? This action cannot be undone."
+        itemName={deleteModal.storyTitle}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

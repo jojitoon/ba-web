@@ -3,49 +3,14 @@
 import Link from "next/link";
 import { Play, Clock, Users, ArrowRight, Star } from "lucide-react";
 
-const featuredStories = [
-  {
-    id: 1,
-    title: "The Family Bakery",
-    business: "Mama Rosa's Bakery",
-    location: "Brooklyn, NY",
-    duration: "45 min",
-    rating: 4.9,
-    image: "/api/placeholder/400/300",
-    description:
-      "Three generations of bakers preserving traditional recipes while embracing modern innovation.",
-    founded: "1952",
-    employees: "12",
-  },
-  {
-    id: 2,
-    title: "The Corner Hardware Store",
-    business: "Johnson's Hardware",
-    location: "Austin, TX",
-    duration: "38 min",
-    rating: 4.8,
-    image: "/api/placeholder/400/300",
-    description:
-      "From fixing leaky faucets to building communities - the story of a neighborhood institution.",
-    founded: "1978",
-    employees: "8",
-  },
-  {
-    id: 3,
-    title: "The Artisan Workshop",
-    business: "Craft & Co.",
-    location: "Portland, OR",
-    duration: "52 min",
-    rating: 4.9,
-    image: "/api/placeholder/400/300",
-    description:
-      "Where traditional craftsmanship meets contemporary design in a modern workshop.",
-    founded: "1985",
-    employees: "15",
-  },
-];
-
 export default function FeaturedStories({ stories }: { stories: any[] }) {
+  // Show only the first 3 stories for featured section
+  const featuredStories = stories.slice(0, 3);
+
+  if (featuredStories.length === 0) {
+    return null;
+  }
+
   return (
     <section className="py-20 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -65,7 +30,7 @@ export default function FeaturedStories({ stories }: { stories: any[] }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12">
           {featuredStories.map((story) => (
             <div
-              key={story.id}
+              key={story._id}
               className="group bg-card rounded-xl overflow-hidden metallic-border hover:metallic-glow transition-all duration-300"
             >
               {/* Story Image */}
@@ -88,13 +53,13 @@ export default function FeaturedStories({ stories }: { stories: any[] }) {
                     <div className="flex items-center space-x-2">
                       <Clock className="w-4 h-4 text-foreground/70" />
                       <span className="text-sm text-foreground/70">
-                        {story.duration}
+                        {story.duration || "N/A"}
                       </span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <Star className="w-4 h-4 text-primary fill-current" />
                       <span className="text-sm text-foreground/70">
-                        {story.rating}
+                        {story.rating || "N/A"}
                       </span>
                     </div>
                   </div>
@@ -105,11 +70,11 @@ export default function FeaturedStories({ stories }: { stories: any[] }) {
               <div className="p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 mb-2">
                   <span className="text-sm text-accent font-medium">
-                    Founded {story.founded}
+                    Founded {story.founded || "N/A"}
                   </span>
                   <div className="flex items-center space-x-1 text-sm text-foreground/60">
                     <Users className="w-4 h-4" />
-                    <span>{story.employees} employees</span>
+                    <span>{story.employees || "N/A"} employees</span>
                   </div>
                 </div>
 
@@ -126,7 +91,7 @@ export default function FeaturedStories({ stories }: { stories: any[] }) {
                 </p>
 
                 <Link
-                  href={`/business-stories/${story.id}`}
+                  href={`/business-stories/${story._id}`}
                   className="inline-flex items-center space-x-2 text-accent hover:text-accent/80 font-medium transition-colors text-sm sm:text-base"
                 >
                   <span>Watch Documentary</span>

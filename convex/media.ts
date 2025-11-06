@@ -1,5 +1,5 @@
-import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { mutation, query } from './_generated/server';
+import { v } from 'convex/values';
 
 export const generateUploadUrl = mutation({
   args: {},
@@ -14,15 +14,15 @@ export const saveStorageId = mutation({
     filename: v.string(),
     mimeType: v.string(),
     size: v.number(),
-    type: v.union(v.literal("image"), v.literal("video")),
-    projectId: v.optional(v.id("projects")),
-    storyId: v.optional(v.id("businessStories")),
+    type: v.union(v.literal('image'), v.literal('video')),
+    projectId: v.optional(v.id('projects')),
+    storyId: v.optional(v.id('businessStories')),
     muxAssetId: v.optional(v.string()),
     muxPlaybackId: v.optional(v.string()),
     uploadId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("media", {
+    return await ctx.db.insert('media', {
       ...args,
       uploadedAt: Date.now(),
     });
@@ -30,34 +30,34 @@ export const saveStorageId = mutation({
 });
 
 export const getMedia = query({
-  args: { id: v.id("media") },
+  args: { id: v.id('media') },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
 });
 
 export const getMediaByProject = query({
-  args: { projectId: v.id("projects") },
+  args: { projectId: v.id('projects') },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query("media")
-      .filter((q) => q.eq(q.field("projectId"), args.projectId))
+      .query('media')
+      .filter((q) => q.eq(q.field('projectId'), args.projectId))
       .collect();
   },
 });
 
 export const getMediaByStory = query({
-  args: { storyId: v.id("businessStories") },
+  args: { storyId: v.id('businessStories') },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query("media")
-      .filter((q) => q.eq(q.field("storyId"), args.storyId))
+      .query('media')
+      .filter((q) => q.eq(q.field('storyId'), args.storyId))
       .collect();
   },
 });
 
 export const deleteMedia = mutation({
-  args: { id: v.id("media") },
+  args: { id: v.id('media') },
   handler: async (ctx, args) => {
     const media = await ctx.db.get(args.id);
     if (media) {
@@ -77,28 +77,50 @@ export const getImageUrl = query({
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("media").order("desc").collect();
+    return await ctx.db.query('media').order('desc').collect();
   },
 });
 
 export const muxWebhook = mutation({
   args: { payload: v.any() },
   handler: async (ctx, { payload }) => {
-    if (payload.type === "video.asset.ready") {
+    if (payload.type === 'video.asset.ready') {
       const assetId = payload.data.id;
       const playbackId = payload.data.playback_ids?.[0]?.id;
       const uploadId = payload.data.upload_id;
 
-      if (!assetId || !playbackId) return;
+      console.log('Mux webhook received:', {
+        type: payload.type,
+        assetId,
+        playbackId,
+        uploadId,
+      });
+
+      if (!assetId || !playbackId) {
+        console.warn('Missing assetId or playbackId in webhook payload');
+        return;
+      }
+
+      // Build query filters - try to match by uploadId or assetId
+      if (!uploadId && !assetId) {
+        console.warn('No uploadId or assetId provided in webhook');
+        return;
+      }
 
       const mediaList = await ctx.db
-        .query("media")
-        .filter((q) =>
-          q.or(
-            q.eq(q.field("muxAssetId"), assetId),
-            q.eq(q.field("uploadId"), uploadId)
-          )
-        )
+        .query('media')
+        .filter((q) => {
+          if (uploadId && assetId) {
+            return q.or(
+              q.eq(q.field('uploadId'), uploadId),
+              q.eq(q.field('muxAssetId'), assetId)
+            );
+          } else if (uploadId) {
+            return q.eq(q.field('uploadId'), uploadId);
+          } else {
+            return q.eq(q.field('muxAssetId'), assetId);
+          }
+        })
         .collect();
 
       const media = mediaList[0];
@@ -109,6 +131,9 @@ export const muxWebhook = mutation({
           muxPlaybackId: playbackId,
           thumbnailUrl,
         });
+        console.log(
+          `✅ Updated media ${media._id} with playbackId: ${playbackId}`
+        );
       } else {
         console.warn(
           `⚠️ No matching media found for uploadId=${uploadId} or assetId=${assetId}`
@@ -123,18 +148,18 @@ export const saveMuxMedia = mutation({
     filename: v.string(),
     uploadId: v.string(),
     size: v.optional(v.number()),
-    projectId: v.optional(v.id("projects")),
-    storyId: v.optional(v.id("businessStories")),
+    projectId: v.optional(v.id('projects')),
+    storyId: v.optional(v.id('businessStories')),
   },
   handler: async (ctx, args) => {
-    const mediaId = await ctx.db.insert("media", {
+    const mediaId = await ctx.db.insert('media', {
       filename: args.filename,
       uploadId: args.uploadId,
       projectId: args.projectId,
       storyId: args.storyId,
-      storageId: "",
-      type: "video",
-      mimeType: "video/mp4",
+      storageId: '',
+      type: 'video',
+      mimeType: 'video/mp4',
       size: args.size ?? 0,
       uploadedAt: Date.now(),
     });
@@ -146,25 +171,25 @@ export const saveMuxMedia = mutation({
 export const bulkUpdateMediaStoryId = mutation({
   args: {
     mediaIds: v.array(v.string()),
-    storyId: v.id("businessStories"),
+    storyId: v.id('businessStories'),
   },
   handler: async (ctx, { mediaIds, storyId }) => {
     if (mediaIds.length === 0) return;
 
     const mediaList = await ctx.db
-      .query("media")
+      .query('media')
       .filter((q) => {
         let filter = q.or(
-          q.eq(q.field("_id"), mediaIds[0]),
-          q.eq(q.field("storageId"), mediaIds[0]),
-          q.eq(q.field("muxAssetId"), mediaIds[0])
+          q.eq(q.field('_id'), mediaIds[0]),
+          q.eq(q.field('storageId'), mediaIds[0]),
+          q.eq(q.field('muxAssetId'), mediaIds[0])
         );
         for (let i = 1; i < mediaIds.length; i++) {
           filter = q.or(
             filter,
-            q.eq(q.field("_id"), mediaIds[i]),
-            q.eq(q.field("storageId"), mediaIds[i]),
-            q.eq(q.field("muxAssetId"), mediaIds[i])
+            q.eq(q.field('_id'), mediaIds[i]),
+            q.eq(q.field('storageId'), mediaIds[i]),
+            q.eq(q.field('muxAssetId'), mediaIds[i])
           );
         }
         return filter;
@@ -179,8 +204,8 @@ export const bulkUpdateMediaStoryId = mutation({
 
 export const bulkUpdateMediaProjectId = mutation({
   args: {
-    mediaIds: v.array(v.id("media")),
-    projectId: v.id("projects"),
+    mediaIds: v.array(v.id('media')),
+    projectId: v.id('projects'),
   },
   handler: async (ctx, { mediaIds, projectId }) => {
     for (const id of mediaIds) {

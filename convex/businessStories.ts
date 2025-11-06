@@ -232,6 +232,7 @@ export const getByIdWithMedia = query({
           _id: media._id,
           filename: media.filename,
           muxAssetId: media.muxAssetId,
+          muxPlaybackId: media.muxPlaybackId,
           playbackUrl,
           thumbnailUrl,
         });
