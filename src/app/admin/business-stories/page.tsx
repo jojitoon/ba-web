@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "convex/_generated/api";
 import {
   Video,
   Plus,
@@ -18,106 +20,6 @@ import {
   Clock,
 } from "lucide-react";
 
-// Mock data - in a real app, this would come from Convex
-const businessStories = [
-  {
-    id: "6cp5xv7c3v1e0pxp2kq7b9zq1",
-    title: "The Family Bakery",
-    business: "Mama Rosa's Bakery",
-    location: "Brooklyn, NY",
-    status: "Published",
-    category: "Food & Beverage",
-    duration: "45 min",
-    rating: 4.9,
-    founded: "1952",
-    employees: "12",
-    date: "2024-01-16",
-    views: 2156,
-    images: 23,
-    videos: 1,
-  },
-  {
-    id: "6cp5xv7c3v1e0pxp2kq7b9zq2",
-    title: "The Corner Hardware Store",
-    business: "Johnson's Hardware",
-    location: "Austin, TX",
-    status: "Published",
-    category: "Retail",
-    duration: "38 min",
-    rating: 4.8,
-    founded: "1978",
-    employees: "8",
-    date: "2024-01-13",
-    views: 1834,
-    images: 18,
-    videos: 1,
-  },
-  {
-    id: "6cp5xv7c3v1e0pxp2kq7b9zq3",
-    title: "The Artisan Workshop",
-    business: "Craft & Co.",
-    location: "Portland, OR",
-    status: "Draft",
-    category: "Manufacturing",
-    duration: "52 min",
-    rating: 0,
-    founded: "1985",
-    employees: "15",
-    date: "2024-01-11",
-    views: 0,
-    images: 12,
-    videos: 0,
-  },
-  {
-    id: "6cp5xv7c3v1e0pxp2kq7b9zq4",
-    title: "The Neighborhood Bookstore",
-    business: "Pages & Prose",
-    location: "Seattle, WA",
-    status: "In Review",
-    category: "Retail",
-    duration: "41 min",
-    rating: 0,
-    founded: "1990",
-    employees: "6",
-    date: "2024-01-09",
-    views: 0,
-    images: 15,
-    videos: 0,
-  },
-  {
-    id: "6cp5xv7c3v1e0pxp2kq7b9zq5",
-    title: "The Local Brewery",
-    business: "Hometown Hops",
-    location: "Denver, CO",
-    status: "Published",
-    category: "Food & Beverage",
-    duration: "48 min",
-    rating: 4.8,
-    founded: "2005",
-    employees: "25",
-    date: "2024-01-07",
-    views: 1923,
-    images: 31,
-    videos: 1,
-  },
-  {
-    id: "6cp5xv7c3v1e0pxp2kq7b9zq6",
-    title: "The Family Farm",
-    business: "Green Acres Organic",
-    location: "Iowa",
-    status: "Draft",
-    category: "Agriculture",
-    duration: "55 min",
-    rating: 0,
-    founded: "1920",
-    employees: "18",
-    date: "2024-01-05",
-    views: 0,
-    images: 28,
-    videos: 0,
-  },
-];
-
 const statusOptions = ["All", "Published", "Draft", "In Review"];
 const categoryOptions = [
   "All",
@@ -132,8 +34,10 @@ export default function AdminBusinessStories() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const stories = useQuery(api.businessStories.list, {});
+  const deleteStory = useMutation(api.businessStories.deleteStory);
 
-  const filteredStories = businessStories.filter((story) => {
+  const filteredStories = stories?.filter((story) => {
     const matchesSearch =
       story.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       story.business.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -144,6 +48,11 @@ export default function AdminBusinessStories() {
       categoryFilter === "All" || story.category === categoryFilter;
     return matchesSearch && matchesStatus && matchesCategory;
   });
+
+  const handleDeleteStory = async (storyId: string) => {
+    await deleteStory({ id: storyId as any });
+    window.location.href = "/admin/business-stories";
+  };
 
   return (
     <div className="space-y-8">
@@ -213,9 +122,9 @@ export default function AdminBusinessStories() {
 
       {/* Stories Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredStories.map((story) => (
+        {filteredStories?.map((story) => (
           <div
-            key={story.id}
+            key={story._id}
             className="bg-card rounded-xl overflow-hidden metallic-border hover:metallic-glow transition-all duration-300"
           >
             {/* Story Header */}
@@ -282,25 +191,25 @@ export default function AdminBusinessStories() {
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-accent mb-1">
-                    {story.views}
+                    {story.views ?? 0}
                   </div>
                   <div className="text-xs text-foreground/60">Views</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary mb-1">
-                    {story.images}
+                    {story.media?.images?.length ?? 0}
                   </div>
                   <div className="text-xs text-foreground/60">Images</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-accent mb-1">
-                    {story.videos}
+                    {story.media?.video ? 1 : 0}
                   </div>
                   <div className="text-xs text-foreground/60">Videos</div>
                 </div>
               </div>
 
-              {story.rating > 0 && (
+              {(story.rating ?? 0) > 0 && (
                 <div className="flex items-center justify-center space-x-1 mb-4">
                   <Star className="w-4 h-4 text-primary fill-current" />
                   <span className="text-sm font-medium text-foreground">
@@ -312,27 +221,36 @@ export default function AdminBusinessStories() {
               <div className="flex items-center justify-between text-sm text-foreground/60 mb-4">
                 <div className="flex items-center space-x-1">
                   <Calendar className="w-4 h-4" />
-                  <span>{story.date}</span>
+                  <span>
+                    {new Date(story.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </span>
                 </div>
               </div>
 
               {/* Actions */}
               <div className="flex items-center space-x-2">
                 <Link
-                  href={`/business-stories/${story.id}`}
+                  href={`/business-stories/${story._id}`}
                   className="flex-1 bg-secondary text-foreground px-4 py-2 rounded-lg font-medium hover:bg-secondary/80 transition-colors flex items-center justify-center space-x-2"
                 >
                   <Eye className="w-4 h-4" />
                   <span>View</span>
                 </Link>
                 <Link
-                  href={`/admin/business-stories/${story.id}/edit`}
+                  href={`/admin/business-stories/${story._id}/edit`}
                   className="flex-1 bg-accent text-accent-foreground px-4 py-2 rounded-lg font-medium hover:bg-accent/90 transition-colors flex items-center justify-center space-x-2"
                 >
                   <Edit className="w-4 h-4" />
                   <span>Edit</span>
                 </Link>
-                <button className="p-2 rounded-lg hover:bg-secondary transition-colors">
+                <button
+                  className="p-2 rounded-lg hover:bg-secondary transition-colors"
+                  onClick={() => handleDeleteStory(story._id)}
+                >
                   <Trash2 className="w-4 h-4 text-foreground/60" />
                 </button>
               </div>
@@ -342,7 +260,7 @@ export default function AdminBusinessStories() {
       </div>
 
       {/* Empty State */}
-      {filteredStories.length === 0 && (
+      {filteredStories?.length === 0 && (
         <div className="text-center py-16">
           <Video className="w-16 h-16 text-foreground/30 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-foreground/70 mb-2">

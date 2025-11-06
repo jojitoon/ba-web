@@ -16,6 +16,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { useState } from "react";
+import MuxPlayer from "@mux/mux-player-react";
 
 const categories = [
   "All",
@@ -29,9 +30,7 @@ const categories = [
 export default function BusinessStoriesPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
-
   const stories = useQuery(api.businessStories.list, { status: "Published" });
-
   const filteredStories =
     stories?.filter((story) => {
       const matchesCategory =
@@ -171,7 +170,7 @@ export default function BusinessStoriesPage() {
                   {/* Play Button Overlay */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-16 h-16 bg-accent/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Play className="w-8 h-8 text-accent-foreground ml-1" />
+                      <Play className="w-8 h-8 text-accent-foreground ml-1 cursor-pointer" />
                     </div>
                   </div>
 
