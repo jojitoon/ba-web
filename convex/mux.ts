@@ -60,3 +60,23 @@ export const createMuxUpload = action({
     };
   },
 });
+
+export const deleteMuxAsset = action({
+  args: { assetId: v.string() },
+  handler: async (ctx: any, args: { assetId: string }) => {
+    if (!process.env.MUX_TOKEN_ID || !process.env.MUX_TOKEN_SECRET) {
+      throw new Error("Missing Mux credentials");
+    }
+
+    try {
+      await mux.video.assets.delete(args.assetId);
+      console.log(`✅ Deleted Mux asset: ${args.assetId}`);
+    } catch (error: any) {
+      // If asset doesn't exist or already deleted, that's okay
+      if (error.status !== 404) {
+        console.error(`Failed to delete Mux asset ${args.assetId}:`, error);
+        throw error;
+      }
+    }
+  },
+});

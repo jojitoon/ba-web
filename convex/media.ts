@@ -67,6 +67,26 @@ export const deleteMedia = mutation({
   },
 });
 
+export const deleteStoryVideos = mutation({
+  args: { storyId: v.id('businessStories') },
+  handler: async (ctx, args) => {
+    const videos = await ctx.db
+      .query('media')
+      .filter((q) =>
+        q.and(
+          q.eq(q.field('storyId'), args.storyId),
+          q.eq(q.field('type'), 'video')
+        )
+      )
+      .collect();
+
+    return videos.map((v) => ({
+      id: v._id,
+      muxAssetId: v.muxAssetId,
+    }));
+  },
+});
+
 export const getImageUrl = query({
   args: { storageId: v.string() },
   handler: async (ctx, args) => {
@@ -132,11 +152,22 @@ export const muxWebhook = mutation({
           thumbnailUrl,
         });
         console.log(
-          `✅ Updated media ${media._id} with playbackId: ${playbackId}`
+          `✅ Updated media ${media._id} with playbackId: ${playbackId}, assetId: ${assetId}`
         );
       } else {
+        // Log all media records to help debug
+        const allMedia = await ctx.db.query('media').collect();
         console.warn(
           `⚠️ No matching media found for uploadId=${uploadId} or assetId=${assetId}`
+        );
+        console.warn(
+          `Available media records:`,
+          allMedia.map((m) => ({
+            id: m._id,
+            uploadId: m.uploadId,
+            muxAssetId: m.muxAssetId,
+            storyId: m.storyId,
+          }))
         );
       }
     }

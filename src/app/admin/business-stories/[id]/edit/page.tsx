@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Save, Eye, Plus, X } from "lucide-react";
 import { api } from "convex/_generated/api";
+import MediaUpload from "@/components/media-upload";
+import MuxVideoUploader from "@/components/video-uploader";
 
 export default function EditBusinessStory() {
   const params = useParams();
@@ -40,6 +42,13 @@ export default function EditBusinessStory() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedMediaIds, setUploadedMediaIds] = useState<string[]>([]);
+
+  const bulkUpdateMediaStoryId = useMutation(api.media.bulkUpdateMediaStoryId);
+  const saveMuxMedia = useMutation(api.media.saveMuxMedia);
+  const deleteMedia = useMutation(api.media.deleteMedia);
+  const deleteStoryVideos = useMutation(api.media.deleteStoryVideos);
+  const deleteMuxAsset = useAction(api.mux.deleteMuxAsset);
 
   // Load story data when it's available
   useEffect(() => {
@@ -154,6 +163,56 @@ export default function EditBusinessStory() {
     }));
   };
 
+  const handleMuxUploadComplete = async (
+    uploadId: string,
+    _: string,
+    size?: number
+  ) => {
+    try {
+      // First, save the new video media record immediately
+      // This ensures the webhook can find it when it fires
+      const mediaId = await saveMuxMedia({
+        filename: `${uploadId}.mp4`,
+        uploadId,
+        size: size ?? 0,
+        storyId: storyId as any,
+      });
+
+      console.log(`✅ Created media record ${mediaId} for uploadId: ${uploadId}`);
+
+      setUploadedMediaIds((prev) => [...prev, mediaId]);
+
+      // Then delete old videos from this story (after new one is saved)
+      if (storyId) {
+        const oldVideos = await deleteStoryVideos({ id: storyId as any });
+        
+        // Filter out the video we just created
+        const videosToDelete = oldVideos.filter((v) => v.id !== mediaId);
+        
+        // Delete from Mux and database
+        for (const video of videosToDelete) {
+          if (video.muxAssetId) {
+            try {
+              await deleteMuxAsset({ assetId: video.muxAssetId });
+              console.log(`✅ Deleted old Mux asset: ${video.muxAssetId}`);
+            } catch (error) {
+              console.error(`Failed to delete Mux asset ${video.muxAssetId}:`, error);
+            }
+          }
+          try {
+            await deleteMedia({ id: video.id });
+            console.log(`✅ Deleted old media record: ${video.id}`);
+          } catch (error) {
+            console.error(`Failed to delete media ${video.id}:`, error);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Failed to save video record:", err);
+      alert("Failed to save video. Please try again.");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -194,6 +253,14 @@ export default function EditBusinessStory() {
           address: formData.supportLinks.address || undefined,
         },
       });
+
+      // Link any newly uploaded media to the story
+      if (uploadedMediaIds.length > 0) {
+        await bulkUpdateMediaStoryId({
+          mediaIds: uploadedMediaIds,
+          storyId: storyId as any,
+        });
+      }
 
       // Redirect to business stories list
       router.push("/admin/business-stories");
@@ -681,6 +748,52 @@ export default function EditBusinessStory() {
                 }
                 className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                 placeholder="123 Business St, City, State, ZIP"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Media Upload Section */}
+        <div className="bg-card rounded-xl p-6 metallic-border">
+          <h2 className="text-xl font-bold text-foreground mb-6">
+            Media Files
+          </h2>
+          <div className="space-y-8">
+            {/* Images */}
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-4">
+                Images
+              </h3>
+              <MediaUpload
+                storyId={storyId as any}
+                onUploadComplete={(imageIds) => {
+                  setUploadedMediaIds((prev) => [...prev, ...imageIds]);
+                }}
+                accept="image/*"
+                maxFiles={5}
+              />
+            </div>
+
+            {/* Videos */}
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-4">
+                Videos
+              </h3>
+              <p className="text-sm text-foreground/60 mb-4">
+                Uploading a new video will replace any existing video for this story.
+              </p>
+              <MuxVideoUploader
+                onUploadComplete={handleMuxUploadComplete}
+                onUploadError={(error) => {
+                  console.error("Mux upload error:", error);
+                  alert(`Video upload failed: ${error}`);
+                }}
+                maxFileSize={500 * 1024 * 1024}
+                acceptedFileTypes={[
+                  "video/mp4",
+                  "video/quicktime",
+                  "video/x-msvideo",
+                ]}
               />
             </div>
           </div>
