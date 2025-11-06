@@ -200,3 +200,19 @@ export const addMedia = mutation({
     }
   },
 });
+
+export const deleteProject = mutation({
+  args: { id: v.id("projects") },
+  handler: async (ctx, { id }) => {
+    const mediaList = await ctx.db
+      .query("media")
+      .filter((q) => q.eq(q.field("projectId"), id))
+      .collect();
+
+    for (const media of mediaList) {
+      await ctx.db.delete(media._id);
+    }
+
+    await ctx.db.delete(id);
+  },
+});
