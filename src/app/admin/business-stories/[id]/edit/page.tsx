@@ -184,7 +184,7 @@ export default function EditBusinessStory() {
 
       // Then delete old videos from this story (after new one is saved)
       if (storyId) {
-        const oldVideos = await deleteStoryVideos({ id: storyId as any });
+        const oldVideos = await deleteStoryVideos({ storyId: storyId as any });
         
         // Filter out the video we just created
         const videosToDelete = oldVideos.filter((v) => v.id !== mediaId);
