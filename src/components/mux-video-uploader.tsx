@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { CheckCircle, AlertCircle, Upload } from "lucide-react";
 import MuxUploader from "@mux/mux-uploader-react";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 interface MuxVideoUploaderProps {
   onUploadComplete?: (assetId: string, playbackId: string) => void;
   onUploadError?: (error: string) => void;
-  maxFileSize?: number; // in bytes
+  maxFileSize?: number;
   acceptedFileTypes?: string[];
 }
 
@@ -18,34 +20,122 @@ export default function MuxVideoUploader({
   acceptedFileTypes = ["video/mp4", "video/quicktime", "video/x-msvideo"],
 }: MuxVideoUploaderProps) {
   const [uploadStatus, setUploadStatus] = useState<
-    "idle" | "uploading" | "success" | "error"
+    "idle" | "uploading" | "processing" | "success" | "error"
   >("idle");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [assetId, setAssetId] = useState("");
   const [playbackId, setPlaybackId] = useState("");
+  const [uploadEndpoint, setUploadEndpoint] = useState("");
+  const [uploadId, setUploadId] = useState("");
+  const [mediaId, setMediaId] = useState<string | null>(null);
+
+  // 1. Add state to hold file details like name and size.
+  const [fileDetails, setFileDetails] = useState({
+    name: "",
+    size: 0,
+    type: "",
+  });
+
   const uploaderRef = useRef<any>(null);
 
-  const handleUploadStart = () => {
+  const saveMediaWithUploadId = useMutation(api.media.saveStorageId);
+
+  const queryArgs = useMemo(
+    () => (mediaId ? { id: mediaId as any } : "skip"),
+    [mediaId]
+  );
+  const mediaRecord = useQuery(api.media.getMedia, queryArgs);
+
+  useEffect(() => {
+    if (
+      mediaRecord &&
+      mediaRecord.muxPlaybackId &&
+      uploadStatus === "processing"
+    ) {
+      setUploadStatus("success");
+      setAssetId(mediaRecord.muxAssetId || "");
+      setPlaybackId(mediaRecord.muxPlaybackId || "");
+      onUploadComplete?.(
+        mediaRecord.muxAssetId || "",
+        mediaRecord.muxPlaybackId || ""
+      );
+    }
+  }, [mediaRecord, uploadStatus, onUploadComplete]);
+
+  const fetchUploadUrl = useCallback(async () => {
+    try {
+      const response = await fetch("/api/mux/upload-url", { method: "POST" });
+      if (!response.ok) throw new Error("Failed to get upload URL");
+      const data = await response.json();
+      setUploadEndpoint(data.url);
+      setUploadId(data.uploadId);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unknown error occurred";
+      setErrorMessage(
+        `Could not connect to the upload service: ${errorMessage}`
+      );
+      setUploadStatus("error");
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUploadUrl();
+  }, [fetchUploadUrl]);
+
+  const handleUploadStart = (event: any) => {
     setUploadStatus("uploading");
     setUploadProgress(0);
     setErrorMessage("");
+
+    const file = event.detail.file;
+    if (file) {
+      setFileDetails({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      });
+    }
   };
 
-  const handleUploadProgress = (event: CustomEvent) => {
-    const progress = event.detail;
-    setUploadProgress(progress);
+  const handleUploadProgress = (event: any) => {
+    if (typeof event.detail === "object") {
+      setUploadProgress(event.detail.bytesUploaded / event.detail.bytesTotal);
+    }
+    if (typeof event.detail === "number") {
+      setUploadProgress(event.detail);
+    }
   };
 
-  const handleUploadSuccess = (event: CustomEvent) => {
-    const { assetId, playbackId } = event.detail;
-    setUploadStatus("success");
-    setAssetId(assetId);
-    setPlaybackId(playbackId);
-    onUploadComplete?.(assetId, playbackId);
+  const handleUploadSuccess = async () => {
+    if (!uploadId) {
+      setUploadStatus("error");
+      setErrorMessage("Upload session ID not found.");
+      return;
+    }
+    setUploadStatus("processing");
+    try {
+      const recordId = await saveMediaWithUploadId({
+        filename: fileDetails.name,
+        type: "video",
+        storageId: "",
+        size: fileDetails.size,
+        mimeType: fileDetails.type,
+        uploadId,
+        muxAssetId: undefined,
+        muxPlaybackId: undefined,
+        projectId: undefined,
+        storyId: undefined,
+      });
+      setMediaId(recordId);
+    } catch (err) {
+      setUploadStatus("error");
+      setErrorMessage("Failed to save media record.");
+    }
   };
 
-  const handleUploadError = (event: CustomEvent) => {
+  const handleUploadError = (event: any) => {
     const error = event.detail;
     setUploadStatus("error");
     setErrorMessage(error.message || "Upload failed");
@@ -58,14 +148,15 @@ export default function MuxVideoUploader({
     setErrorMessage("");
     setAssetId("");
     setPlaybackId("");
-    if (uploaderRef.current) {
-      uploaderRef.current.reset();
-    }
+    setUploadId("");
+    setMediaId(null);
+    setFileDetails({ name: "", size: 0, type: "" });
+    if (uploaderRef.current) uploaderRef.current.reset();
+    fetchUploadUrl();
   };
 
   return (
     <div className="space-y-4">
-      {/* Upload Area */}
       <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
         <Upload className="w-12 h-12 text-foreground/30 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -75,11 +166,14 @@ export default function MuxVideoUploader({
           Upload your video file for processing and streaming
         </p>
 
-        {uploadStatus === "idle" && (
+        {uploadStatus === "idle" && uploadEndpoint ? (
           <MuxUploader
             ref={uploaderRef}
-            endpoint={process.env.NEXT_PUBLIC_MUX_UPLOAD_ENDPOINT}
+            endpoint={uploadEndpoint}
             onUploadStart={handleUploadStart}
+            onProgress={() => {
+              console.log("progress");
+            }}
             onSuccess={handleUploadSuccess}
             onUploadError={handleUploadError}
             maxFileSize={maxFileSize}
@@ -93,6 +187,12 @@ export default function MuxVideoUploader({
               } as React.CSSProperties
             }
           />
+        ) : (
+          uploadStatus === "idle" && (
+            <p className="text-sm text-muted-foreground">
+              Fetching upload URL...
+            </p>
+          )
         )}
 
         {uploadStatus === "uploading" && (
@@ -106,6 +206,18 @@ export default function MuxVideoUploader({
             <p className="text-sm text-foreground/60">
               Uploading... {Math.round(uploadProgress)}%
             </p>
+          </div>
+        )}
+
+        {uploadStatus === "processing" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-center">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+            <p className="text-sm text-foreground/60">
+              Video is processing. This may take a few minutes...
+            </p>
+            <p className="text-xs text-foreground/40">Upload ID: {uploadId}</p>
           </div>
         )}
 
@@ -145,7 +257,6 @@ export default function MuxVideoUploader({
         )}
       </div>
 
-      {/* File Requirements */}
       <div className="bg-card rounded-lg p-4">
         <h4 className="font-medium text-foreground mb-2">Video Requirements</h4>
         <ul className="text-sm text-foreground/60 space-y-1">
@@ -153,8 +264,6 @@ export default function MuxVideoUploader({
             • Maximum file size: {(maxFileSize / 1024 / 1024).toFixed(0)}MB
           </li>
           <li>• Supported formats: MP4, MOV, AVI</li>
-          <li>• Recommended resolution: 1920x1080 or higher</li>
-          <li>• Videos will be processed for optimal streaming</li>
         </ul>
       </div>
     </div>

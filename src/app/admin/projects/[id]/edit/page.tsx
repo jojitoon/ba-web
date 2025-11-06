@@ -567,7 +567,6 @@ export default function EditProject() {
           </h2>
           <MuxVideoUploader
             onUploadComplete={(assetId, playbackId) => {
-              console.log("Video uploaded:", { assetId, playbackId });
               // Handle video upload completion
             }}
             onUploadError={(error) => {

@@ -11,7 +11,9 @@ export default function EditBusinessStory() {
   const router = useRouter();
   const storyId = params.id as string;
 
-  const story = useQuery(api.businessStories.get, { id: storyId as any });
+  const story = useQuery(api.businessStories.getByIdWithMedia, {
+    id: storyId as any,
+  });
   const updateStory = useMutation(api.businessStories.update);
 
   const [formData, setFormData] = useState({

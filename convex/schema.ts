@@ -1,5 +1,5 @@
-import { defineSchema, defineTable } from 'convex/server';
-import { v } from 'convex/values';
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
 
 export default defineSchema({
   projects: defineTable({
@@ -7,11 +7,11 @@ export default defineSchema({
     location: v.string(),
     category: v.string(),
     status: v.union(
-      v.literal('Draft'),
-      v.literal('Archived'),
-      v.literal('In Progress'),
-      v.literal('In Review'),
-      v.literal('Published')
+      v.literal("Draft"),
+      v.literal("Archived"),
+      v.literal("In Progress"),
+      v.literal("In Review"),
+      v.literal("Published")
     ),
     budget: v.optional(v.string()),
     timeline: v.optional(v.string()),
@@ -39,9 +39,9 @@ export default defineSchema({
         endDate: v.string(),
         description: v.string(),
         status: v.union(
-          v.literal('completed'),
-          v.literal('in-progress'),
-          v.literal('pending')
+          v.literal("completed"),
+          v.literal("in-progress"),
+          v.literal("pending")
         ),
         images: v.array(v.string()), // Convex storage IDs
       })
@@ -65,11 +65,11 @@ export default defineSchema({
     location: v.string(),
     category: v.string(),
     status: v.union(
-      v.literal('Draft'),
-      v.literal('In Review'),
-      v.literal('Archived'),
-      v.literal('In Progress'),
-      v.literal('Published')
+      v.literal("Draft"),
+      v.literal("In Review"),
+      v.literal("Archived"),
+      v.literal("In Progress"),
+      v.literal("Published")
     ),
     duration: v.optional(v.string()),
     rating: v.optional(v.number()),
@@ -78,6 +78,7 @@ export default defineSchema({
     description: v.string(),
     fullDescription: v.optional(v.string()),
     ownerStory: v.optional(v.string()),
+    views: v.optional(v.number()),
     milestones: v.array(
       v.object({
         year: v.string(),
@@ -99,31 +100,35 @@ export default defineSchema({
       email: v.optional(v.string()),
       address: v.optional(v.string()),
     }),
-    media: v.object({
-      images: v.array(v.string()), // Convex storage IDs
-      video: v.optional(v.string()), // Mux asset ID
-    }),
+    media: v.optional(
+      v.object({
+        images: v.array(v.string()),
+        video: v.optional(v.string()),
+      })
+    ),
     createdAt: v.number(),
     updatedAt: v.number(),
   }),
 
   media: defineTable({
-    type: v.union(v.literal('image'), v.literal('video')),
+    type: v.union(v.literal("image"), v.literal("video")),
     filename: v.string(),
     storageId: v.string(), // Convex storage ID
     muxAssetId: v.optional(v.string()), // For videos
     muxPlaybackId: v.optional(v.string()), // For videos
+    uploadId: v.optional(v.string()), // Mux upload ID for tracking
+    thumbnailUrl: v.optional(v.string()),
     size: v.number(),
     mimeType: v.string(),
-    projectId: v.optional(v.id('projects')),
-    storyId: v.optional(v.id('businessStories')),
+    projectId: v.optional(v.id("projects")),
+    storyId: v.optional(v.id("businessStories")),
     uploadedAt: v.number(),
   }),
 
   users: defineTable({
     name: v.string(),
     email: v.string(),
-    role: v.union(v.literal('admin'), v.literal('editor'), v.literal('viewer')),
+    role: v.union(v.literal("admin"), v.literal("editor"), v.literal("viewer")),
     createdAt: v.number(),
     lastLoginAt: v.optional(v.number()),
   }),
