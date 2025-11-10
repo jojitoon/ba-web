@@ -38,11 +38,15 @@ export default function FavoriteButton({
   const toggleFavorite = useMutation(api.favorites.toggleFavorite);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setIsLoading(false);
+      return;
+    }
     if (favoriteStatus !== undefined) {
       setIsFavorited(favoriteStatus);
       setIsLoading(false);
     }
-  }, [favoriteStatus]);
+  }, [favoriteStatus, isAuthenticated]);
 
   const handleClick = async () => {
     if (!isAuthenticated) {

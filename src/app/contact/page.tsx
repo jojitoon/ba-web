@@ -262,18 +262,10 @@ export default function ContactPage() {
                     </h3>
                     <p>
                       <a
-                        href="mailto:hello@builtancestry.com"
+                        href="mailto:builtAncestry@gmail.com"
                         className="text-foreground/70"
                       >
-                        hello@builtancestry.com
-                      </a>
-                    </p>
-                    <p>
-                      <a
-                        href="mailto:projects@builtancestry.com"
-                        className="text-foreground/70"
-                      >
-                        projects@builtancestry.com
+                        builtAncestry@gmail.com
                       </a>
                     </p>
                   </div>
@@ -287,8 +279,8 @@ export default function ContactPage() {
                     <h3 className="font-semibold text-foreground mb-1">
                       Call Us
                     </h3>
-                    <a href="tel:+15551234567" className="text-foreground/70">
-                      +1 (555) 123-4567
+                    <a href="tel:+13476799566" className="text-foreground/70">
+                      347-679-9566
                     </a>
                     <p className="text-foreground/60 text-sm">
                       Mon-Fri 9AM-6PM EST
