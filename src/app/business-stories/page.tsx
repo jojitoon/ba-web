@@ -60,92 +60,100 @@ export default function BusinessStoriesPage() {
       <Navigation />
 
       {/* Page Header */}
-      <section className="pt-50 pb-16 bg-card/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
-              Business <span className="text-accent">Stories</span>
-            </h1>
-            <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
-              Discover the inspiring stories of local businesses, their
-              founders, and the communities they serve. Each documentary
-              captures the heart and soul of American entrepreneurship.
-            </p>
-          </div>
-
-          {/* Search and Filter */}
-          <div className="flex flex-col md:flex-row gap-4 justify-center items-center mb-8">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground/50 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search stories..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-3 bg-card border border-border rounded-lg text-foreground placeholder-foreground/50 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent w-64"
-              />
+      <section className="pt-32 pb-20 bg-secondary/20">
+        <div className="max-w-[1920px] mx-auto px-6 lg:px-12">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-12">
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="h-px w-16 bg-foreground"></div>
+                <span className="text-xs uppercase tracking-[0.2em] font-semibold text-foreground/60">
+                  Documentaries
+                </span>
+              </div>
+              <h1 className="magazine-headline text-5xl sm:text-6xl lg:text-7xl text-foreground mb-6 max-w-4xl">
+                Business <span className="italic">Stories</span>
+              </h1>
+              <p className="editorial-text text-lg lg:text-xl text-foreground/70 max-w-2xl">
+                Discover the inspiring stories of local businesses, their
+                founders, and the communities they serve. Each documentary
+                captures the heart and soul of American entrepreneurship.
+              </p>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Filter className="w-5 h-5 text-foreground/50" />
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="bg-card border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-              >
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+            {/* Search and Filter */}
+            <div className="flex flex-col md:flex-row gap-4 items-center mb-12">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-foreground/40 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search stories..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-12 pr-4 py-3 bg-background border border-border text-foreground placeholder-foreground/40 focus:outline-none focus:ring-2 focus:ring-foreground focus:border-transparent w-64 text-sm"
+                />
+              </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 text-center">
-            <div className="bg-card/50 rounded-lg p-4 metallic-border">
-              <div className="text-2xl font-bold text-accent mb-1">
-                {stories?.length || 0}
-              </div>
-              <div className="text-foreground/70 text-sm">Documentaries</div>
-            </div>
-            <div className="bg-card/50 rounded-lg p-4 metallic-border">
-              <div className="text-2xl font-bold text-primary mb-1">
-                {stories && stories.length > 0
-                  ? (
-                      stories.reduce(
-                        (acc, story) => acc + (story.rating || 0),
-                        0
-                      ) / stories.length
-                    ).toFixed(1)
-                  : "0.0"}
-              </div>
-              <div className="text-foreground/70 text-sm">Avg Rating</div>
-            </div>
-            <div className="bg-card/50 rounded-lg p-4 metallic-border">
-              <div className="text-2xl font-bold text-accent mb-1">
-                {stories?.reduce((acc, story) => {
-                  const duration = story.duration
-                    ? parseInt(story.duration)
-                    : 0;
-                  return acc + duration;
-                }, 0) || 0}
-                +
-              </div>
-              <div className="text-foreground/70 text-sm">
-                Minutes of Content
+              <div className="flex items-center space-x-3">
+                <Filter className="w-5 h-5 text-foreground/40" />
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="bg-background border border-border px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-foreground focus:border-transparent text-sm"
+                >
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
-            <div className="bg-card/50 rounded-lg p-4 metallic-border">
-              <div className="text-2xl font-bold text-primary mb-1">
-                {
-                  new Set(
-                    stories?.map((s) => s.location.split(",")[1]?.trim()) || []
-                  ).size
-                }
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-background/50 p-6 border-l-4 border-foreground">
+                <div className="text-4xl lg:text-5xl font-serif font-bold text-foreground mb-2">
+                  {stories?.length || 0}
+                </div>
+                <div className="text-sm text-foreground/60 uppercase tracking-wider">Documentaries</div>
               </div>
-              <div className="text-foreground/70 text-sm">States</div>
+              <div className="bg-background/50 p-6 border-l-4 border-foreground">
+                <div className="text-4xl lg:text-5xl font-serif font-bold text-foreground mb-2">
+                  {stories && stories.length > 0
+                    ? (
+                        stories.reduce(
+                          (acc, story) => acc + (story.rating || 0),
+                          0
+                        ) / stories.length
+                      ).toFixed(1)
+                    : "0.0"}
+                </div>
+                <div className="text-sm text-foreground/60 uppercase tracking-wider">Avg Rating</div>
+              </div>
+              <div className="bg-background/50 p-6 border-l-4 border-foreground">
+                <div className="text-4xl lg:text-5xl font-serif font-bold text-foreground mb-2">
+                  {stories?.reduce((acc, story) => {
+                    const duration = story.duration
+                      ? parseInt(story.duration)
+                      : 0;
+                    return acc + duration;
+                  }, 0) || 0}
+                  +
+                </div>
+                <div className="text-sm text-foreground/60 uppercase tracking-wider">
+                  Minutes of Content
+                </div>
+              </div>
+              <div className="bg-background/50 p-6 border-l-4 border-foreground">
+                <div className="text-4xl lg:text-5xl font-serif font-bold text-foreground mb-2">
+                  {
+                    new Set(
+                      stories?.map((s) => s.location.split(",")[1]?.trim()) || []
+                    ).size
+                  }
+                </div>
+                <div className="text-sm text-foreground/60 uppercase tracking-wider">States</div>
+              </div>
             </div>
           </div>
         </div>
@@ -153,103 +161,99 @@ export default function BusinessStoriesPage() {
 
       {/* Stories Grid */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredStories.map((story) => (
-              <div
-                key={story._id}
-                className="group bg-card rounded-xl overflow-hidden metallic-border hover:metallic-glow transition-all duration-300"
-              >
-                {/* Story Image */}
-                <div className="relative h-64 overflow-hidden">
-                  <div className="w-full h-full bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center">
-                    <Play className="w-16 h-16 text-accent/50" />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent"></div>
+        <div className="max-w-[1920px] mx-auto px-6 lg:px-12">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+              {filteredStories.map((story) => (
+                <Link
+                  key={story._id}
+                  href={`/business-stories/${story._id}`}
+                  className="group editorial-card block"
+                >
+                  {/* Story Image */}
+                  <div className="relative h-80 overflow-hidden mb-6 bg-secondary/30">
+                    <div className="w-full h-full bg-gradient-to-br from-secondary/40 to-secondary/20 flex items-center justify-center">
+                      <Play className="w-20 h-20 text-foreground/20" />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent"></div>
 
-                  {/* Play Button Overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-16 bg-accent/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Play className="w-8 h-8 text-accent-foreground ml-1 cursor-pointer" />
+                    {/* Play Button Overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-20 h-20 bg-foreground/90 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Play className="w-10 h-10 text-background ml-1" />
+                      </div>
+                    </div>
+
+                    {/* Story Info */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2 text-xs text-foreground/80 bg-background/90 px-3 py-1.5">
+                          <Clock className="w-3 h-3" />
+                          <span>{story.duration || "N/A"}</span>
+                        </div>
+                        <div className="flex items-center space-x-1 text-xs text-foreground/80 bg-background/90 px-3 py-1.5">
+                          <Star className="w-3 h-3 fill-current" />
+                          <span>{story.rating || "N/A"}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Story Info */}
-                  <div className="absolute bottom-4 left-4 right-4">
+                  {/* Story Content */}
+                  <div className="space-y-4 px-6 pb-6">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Clock className="w-4 h-4 text-foreground/70" />
-                        <span className="text-sm text-foreground/70">
-                          {story.duration || "N/A"}
-                        </span>
+                      <span className="text-xs text-foreground/50 bg-secondary/50 px-3 py-1 uppercase tracking-wider">
+                        {story.category}
+                      </span>
+                      <div className="flex items-center space-x-2 text-xs text-foreground/50 uppercase tracking-wider">
+                        <Calendar className="w-3 h-3" />
+                        <span>{new Date(story.createdAt).getFullYear()}</span>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-4 h-4 text-primary fill-current" />
-                        <span className="text-sm text-foreground/70">
-                          {story.rating || "N/A"}
-                        </span>
+                    </div>
+
+                    <h3 className="text-2xl lg:text-3xl font-serif font-bold text-foreground group-hover:opacity-70 transition-opacity leading-tight">
+                      {story.title}
+                    </h3>
+
+                    <p className="text-sm text-foreground/60 font-medium">
+                      {story.business}
+                    </p>
+
+                    <p className="editorial-text text-foreground/70 line-clamp-3">
+                      {story.description}
+                    </p>
+
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="flex items-center space-x-4 text-xs text-foreground/50 uppercase tracking-wider">
+                        <div className="flex items-center space-x-1">
+                          <Users className="w-3 h-3" />
+                          <span>{story.employees || "N/A"} employees</span>
+                        </div>
+                        <span>Founded {story.founded || "N/A"}</span>
+                      </div>
+
+                      <div className="flex items-center space-x-2 text-sm font-semibold text-foreground uppercase tracking-wider">
+                        <span>Watch</span>
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Story Content */}
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-accent bg-accent/10 px-2 py-1 rounded">
-                      {story.category}
-                    </span>
-                    <div className="flex items-center space-x-2 text-sm text-foreground/60">
-                      <Calendar className="w-4 h-4" />
-                      <span>{new Date(story.createdAt).getFullYear()}</span>
-                    </div>
-                  </div>
-
-                  <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-accent transition-colors">
-                    {story.title}
-                  </h3>
-
-                  <p className="text-sm text-foreground/60 mb-3">
-                    {story.business}
-                  </p>
-
-                  <p className="text-foreground/70 mb-4 line-clamp-3">
-                    {story.description}
-                  </p>
-
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-4 text-sm text-foreground/60">
-                      <div className="flex items-center space-x-1">
-                        <Users className="w-4 h-4" />
-                        <span>{story.employees || "N/A"} employees</span>
-                      </div>
-                      <span>Founded {story.founded || "N/A"}</span>
-                    </div>
-                  </div>
-
-                  <Link
-                    href={`/business-stories/${story._id}`}
-                    className="inline-flex items-center space-x-2 text-accent hover:text-accent/80 font-medium transition-colors"
-                  >
-                    <span>Watch Documentary</span>
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {filteredStories.length === 0 && (
-            <div className="text-center py-16">
-              <Play className="w-16 h-16 text-foreground/30 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-foreground/70 mb-2">
-                No stories found
-              </h3>
-              <p className="text-foreground/50">
-                Try adjusting your search or filter criteria.
-              </p>
+                </Link>
+              ))}
             </div>
-          )}
+
+            {filteredStories.length === 0 && (
+              <div className="text-center py-24">
+                <Play className="w-20 h-20 text-foreground/20 mx-auto mb-6" />
+                <h3 className="text-2xl font-serif font-bold text-foreground/70 mb-3">
+                  No stories found
+                </h3>
+                <p className="text-foreground/50">
+                  Try adjusting your search or filter criteria.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 

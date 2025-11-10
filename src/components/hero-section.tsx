@@ -1,86 +1,110 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { Play, ArrowRight, Building2, Video } from "lucide-react";
+import Link from 'next/link';
+import { Play, ArrowRight, Building2, Video, TrendingUp } from 'lucide-react';
 
 export default function HeroSection() {
   return (
-    <section className="relative min-h-screen flex items-start py-40 md:items-center justify-center overflow-hidden">
-      {/* Background Video/Images */}
-      <div className="absolute inset-0 z-0">
-        <div className="w-full h-full bg-gradient-to-br from-background via-background/90 to-background/80 construction-texture">
-          {/* Placeholder for looping construction/business clips */}
-          <div
-            className="absolute inset-0 opacity-20"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            }}
-          ></div>
-        </div>
+    <section className='relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-20'>
+      {/* Subtle Background Pattern */}
+      <div className='absolute inset-0 z-0'>
+        <div className='w-full h-full bg-background architectural-grid opacity-30'></div>
+        <div className='absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background'></div>
       </div>
 
       {/* Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div className="max-w-4xl mx-auto min-h-7">
-          {/* Main Tagline */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground mb-4 sm:mb-6 leading-tight px-4 sm:px-0">
-            Preserving Legacies in{" "}
-            <span className="text-primary">Construction</span> &{" "}
-            <span className="text-accent">Business</span>
-          </h1>
-
-          {/* Subtitle */}
-          <p className="text-lg sm:text-xl md:text-2xl text-foreground/80 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed px-4 sm:px-0">
-            Capture, document, and showcase every stage of your construction
-            projects and business stories with immersive visuals, 3D models,
-            virtual tours, and team interviews.
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center px-4 sm:px-0">
-            <Link
-              href="/projects"
-              className="group bg-primary text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg hover:bg-primary/90 transition-all duration-300 flex items-center space-x-2 sm:space-x-3 metallic-glow w-full sm:w-auto justify-center"
-            >
-              <Building2 className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span>Explore Projects</span>
-              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-
-            <Link
-              href="/business-stories"
-              className="group bg-accent text-accent-foreground px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg hover:bg-accent/90 transition-all duration-300 flex items-center space-x-2 sm:space-x-3 metallic-glow w-full sm:w-auto justify-center"
-            >
-              <Video className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span>Watch Business Stories</span>
-              <Play className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
-            </Link>
-          </div>
-
-          {/* Stats or Features Preview */}
-          <div className="mt-12 sm:mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 max-w-4xl mx-auto px-4 sm:px-0">
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-primary mb-2">
-                500+
+      <div className='relative z-10 max-w-[1920px] mx-auto px-6 lg:px-12 w-full'>
+        <div className='max-w-7xl mx-auto'>
+          {/* Editorial Layout */}
+          <div className='grid lg:grid-cols-12 gap-12 lg:gap-16 items-center'>
+            {/* Main Content - Left Side */}
+            <div className='lg:col-span-7 space-y-8'>
+              {/* Category Label */}
+              <div className='flex items-center space-x-4 mt-20 md:mt-0'>
+                <div className='h-px w-16 bg-foreground'></div>
+                <span className='text-xs uppercase tracking-[0.2em] font-semibold text-foreground/60'>
+                  Legacy Documentation
+                </span>
               </div>
-              <div className="text-sm sm:text-base text-foreground/70">
-                Projects Documented
+
+              {/* Main Headline */}
+              <h1 className='magazine-headline text-5xl sm:text-6xl lg:text-7xl xl:text-8xl text-foreground leading-[1.05]'>
+                Preserving Legacies in{' '}
+                <span className='italic'>Construction</span> &{' '}
+                <span className='italic'>Business</span>
+              </h1>
+
+              {/* Subtitle */}
+              <p className='editorial-text text-lg sm:text-xl lg:text-2xl text-foreground/70 max-w-2xl leading-relaxed'>
+                Capture, document, and showcase every stage of your construction
+                projects and business stories with immersive visuals, 3D models,
+                virtual tours, and team interviews.
+              </p>
+
+              {/* CTA Buttons */}
+              <div className='flex flex-col sm:flex-row gap-4 pt-4'>
+                <Link
+                  href='/projects'
+                  className='group inline-flex items-center justify-center space-x-3 bg-foreground text-background px-8 py-4 font-semibold text-sm uppercase tracking-wider hover:bg-foreground/90 transition-all duration-300'
+                >
+                  <Building2 className='w-5 h-5' />
+                  <span>Explore Projects</span>
+                  <ArrowRight className='w-4 h-4 group-hover:translate-x-1 transition-transform' />
+                </Link>
+
+                <Link
+                  href='/business-stories'
+                  className='group inline-flex items-center justify-center space-x-3 border-2 border-foreground text-foreground px-8 py-4 font-semibold text-sm uppercase tracking-wider hover:bg-foreground hover:text-background transition-all duration-300'
+                >
+                  <Video className='w-5 h-5' />
+                  <span>Watch Stories</span>
+                  <Play className='w-4 h-4 group-hover:scale-110 transition-transform' />
+                </Link>
               </div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-accent mb-2">
-                100+
-              </div>
-              <div className="text-sm sm:text-base text-foreground/70">
-                Business Stories
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-primary mb-2">
-                50+
-              </div>
-              <div className="text-sm sm:text-base text-foreground/70">
-                Cities Covered
+
+            {/* Stats Sidebar - Right Side */}
+            <div className='lg:col-span-5'>
+              <div className='bg-secondary/30 p-8 lg:p-12 space-y-8 border-l-4 border-foreground'>
+                <div className='flex items-center space-x-3'>
+                  <TrendingUp className='w-6 h-6 text-foreground/60' />
+                  <h3 className='text-sm uppercase tracking-wider font-semibold text-foreground/60'>
+                    By The Numbers
+                  </h3>
+                </div>
+
+                <div className='space-y-6'>
+                  <div>
+                    <div className='text-5xl lg:text-6xl font-serif font-bold text-foreground mb-2'>
+                      500+
+                    </div>
+                    <div className='text-sm text-foreground/60 uppercase tracking-wider'>
+                      Projects Documented
+                    </div>
+                  </div>
+
+                  <div className='h-px bg-border'></div>
+
+                  <div>
+                    <div className='text-5xl lg:text-6xl font-serif font-bold text-foreground mb-2'>
+                      100+
+                    </div>
+                    <div className='text-sm text-foreground/60 uppercase tracking-wider'>
+                      Business Stories
+                    </div>
+                  </div>
+
+                  <div className='h-px bg-border'></div>
+
+                  <div>
+                    <div className='text-5xl lg:text-6xl font-serif font-bold text-foreground mb-2'>
+                      50+
+                    </div>
+                    <div className='text-sm text-foreground/60 uppercase tracking-wider'>
+                      Cities Covered
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -88,9 +112,14 @@ export default function HeroSection() {
       </div>
 
       {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
-        <div className="w-6 h-10 border-2 border-foreground/30 rounded-full flex justify-center">
-          <div className="w-1 h-3 bg-primary rounded-full mt-2 animate-bounce"></div>
+      <div className='absolute bottom-12 left-1/2 transform -translate-x-1/2 z-10'>
+        <div className='flex flex-col items-center space-y-2'>
+          <span className='text-xs uppercase tracking-wider text-foreground/40 font-medium'>
+            Scroll
+          </span>
+          <div className='w-px h-12 bg-foreground/20 relative'>
+            <div className='absolute top-0 left-1/2 transform -translate-x-1/2 w-1 h-6 bg-foreground/40 animate-pulse'></div>
+          </div>
         </div>
       </div>
     </section>

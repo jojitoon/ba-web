@@ -67,100 +67,106 @@ const testimonials = [
 
 export default function Testimonials() {
   return (
-    <section className='py-20 bg-card/30'>
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-        {/* Section Header */}
-        <div className='text-center mb-12 sm:mb-16 px-4 sm:px-0'>
-          <h2 className='text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6'>
-            What Our <span className='text-primary'>Clients Say</span>
-          </h2>
-          <p className='text-lg sm:text-xl text-foreground/70 max-w-3xl mx-auto'>
-            Hear from construction professionals and business owners who have
-            transformed their projects and stories with Built Ancestry.
-          </p>
-        </div>
+    <section className='py-24 bg-background'>
+      <div className='max-w-[1920px] mx-auto px-6 lg:px-12'>
+        <div className='max-w-7xl mx-auto'>
+          {/* Section Header */}
+          <div className='mb-16'>
+            <div className='flex items-center space-x-4 mb-6'>
+              <div className='h-px w-16 bg-foreground'></div>
+              <span className='text-xs uppercase tracking-[0.2em] font-semibold text-foreground/60'>
+                Client Testimonials
+              </span>
+            </div>
+            <h2 className='magazine-headline text-4xl sm:text-5xl lg:text-6xl text-foreground mb-6 max-w-3xl'>
+              What Our <span className='italic'>Clients Say</span>
+            </h2>
+            <p className='editorial-text text-lg lg:text-xl text-foreground/70 max-w-2xl'>
+              Hear from construction professionals and business owners who have
+              transformed their projects and stories with Built Ancestry.
+            </p>
+          </div>
 
-        {/* Testimonials Grid */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8'>
-          {testimonials.map((testimonial) => (
-            <div
-              key={testimonial.id}
-              className='bg-card rounded-xl p-4 sm:p-6 metallic-border hover:metallic-glow transition-all duration-300 relative'
-            >
-              {/* Quote Icon */}
-              <div className='absolute top-4 right-4'>
-                <Quote className='w-8 h-8 text-primary/20' />
-              </div>
+          {/* Testimonials Grid */}
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12 mb-16'>
+            {testimonials.map((testimonial) => (
+              <div
+                key={testimonial.id}
+                className='editorial-card p-8 relative'
+              >
+                {/* Quote Icon */}
+                <div className='absolute top-6 right-6'>
+                  <Quote className='w-10 h-10 text-foreground/10' />
+                </div>
 
-              {/* Rating */}
-              <div className='flex items-center space-x-1 mb-4'>
-                {[...Array(testimonial.rating)].map((_, i) => (
-                  <Star key={i} className='w-5 h-5 text-primary fill-current' />
-                ))}
-              </div>
+                {/* Rating */}
+                <div className='flex items-center space-x-1 mb-6'>
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className='w-4 h-4 text-foreground fill-current' />
+                  ))}
+                </div>
 
-              {/* Content */}
-              <p className='text-sm sm:text-base text-foreground/80 mb-4 sm:mb-6 leading-relaxed'>
-                "{testimonial.content}"
-              </p>
+                {/* Content */}
+                <p className='editorial-text text-foreground/80 mb-8 leading-relaxed'>
+                  "{testimonial.content}"
+                </p>
 
-              {/* Author Info */}
-              <div className='border-t border-border pt-4'>
-                <div className='flex items-center justify-between'>
+                {/* Author Info */}
+                <div className='border-t border-border pt-6 space-y-3'>
                   <div>
-                    <h4 className='font-semibold text-foreground'>
+                    <h4 className='font-serif font-bold text-lg text-foreground mb-1'>
                       {testimonial.name}
                     </h4>
-                    <p className='text-sm text-foreground/60'>
+                    <p className='text-sm text-foreground/60 uppercase tracking-wider'>
                       {testimonial.role}
                     </p>
-                    <p className='text-sm text-primary'>
+                    <p className='text-sm font-semibold text-foreground/80 mt-1'>
                       {testimonial.company}
                     </p>
                   </div>
-                </div>
-                <div className='mt-2'>
-                  <span className='text-xs text-foreground/50 bg-secondary px-2 py-1 rounded'>
-                    {testimonial.project}
-                  </span>
+                  <div>
+                    <span className='text-xs text-foreground/50 bg-secondary/50 px-3 py-1.5 uppercase tracking-wider'>
+                      {testimonial.project}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        {/* Stats Section */}
-        <div className='mt-12 sm:mt-16 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 text-center'>
-          <div className='bg-card/50 rounded-lg p-4 sm:p-6 metallic-border'>
-            <div className='text-2xl sm:text-3xl font-bold text-primary mb-2'>
-              98%
+          {/* Stats Section */}
+          <div className='grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 border-t border-border pt-16'>
+            <div className='text-center'>
+              <div className='text-5xl lg:text-6xl font-serif font-bold text-foreground mb-3'>
+                98%
+              </div>
+              <div className='text-sm text-foreground/60 uppercase tracking-wider'>
+                Client Satisfaction
+              </div>
             </div>
-            <div className='text-sm sm:text-base text-foreground/70'>
-              Client Satisfaction
+            <div className='text-center'>
+              <div className='text-5xl lg:text-6xl font-serif font-bold text-foreground mb-3'>
+                500+
+              </div>
+              <div className='text-sm text-foreground/60 uppercase tracking-wider'>
+                Projects Completed
+              </div>
             </div>
-          </div>
-          <div className='bg-card/50 rounded-lg p-4 sm:p-6 metallic-border'>
-            <div className='text-2xl sm:text-3xl font-bold text-accent mb-2'>
-              500+
+            <div className='text-center'>
+              <div className='text-5xl lg:text-6xl font-serif font-bold text-foreground mb-3'>
+                50+
+              </div>
+              <div className='text-sm text-foreground/60 uppercase tracking-wider'>
+                Cities Covered
+              </div>
             </div>
-            <div className='text-sm sm:text-base text-foreground/70'>
-              Projects Completed
-            </div>
-          </div>
-          <div className='bg-card/50 rounded-lg p-4 sm:p-6 metallic-border'>
-            <div className='text-2xl sm:text-3xl font-bold text-primary mb-2'>
-              50+
-            </div>
-            <div className='text-sm sm:text-base text-foreground/70'>
-              Cities Covered
-            </div>
-          </div>
-          <div className='bg-card/50 rounded-lg p-4 sm:p-6 metallic-border'>
-            <div className='text-2xl sm:text-3xl font-bold text-accent mb-2'>
-              24/7
-            </div>
-            <div className='text-sm sm:text-base text-foreground/70'>
-              Support Available
+            <div className='text-center'>
+              <div className='text-5xl lg:text-6xl font-serif font-bold text-foreground mb-3'>
+                24/7
+              </div>
+              <div className='text-sm text-foreground/60 uppercase tracking-wider'>
+                Support Available
+              </div>
             </div>
           </div>
         </div>
