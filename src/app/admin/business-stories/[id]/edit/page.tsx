@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Eye, Plus, X } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Plus, X, Trash2, Video } from 'lucide-react';
 import { api } from 'convex/_generated/api';
 import MediaUpload from '@/components/media-upload';
 import MuxVideoUploader from '@/components/video-uploader';
@@ -215,6 +215,48 @@ export default function EditBusinessStory() {
     } catch (err) {
       console.error('Failed to save video record:', err);
       alert('Failed to save video. Please try again.');
+    }
+  };
+
+  const handleDeleteImage = async (imageId: string) => {
+    if (!confirm('Are you sure you want to delete this image?')) {
+      return;
+    }
+
+    try {
+      await deleteMedia({ id: imageId as any });
+      // Remove from uploadedMediaIds if it's there
+      setUploadedMediaIds((prev) => prev.filter((id) => id !== imageId));
+    } catch (error) {
+      console.error('Failed to delete image:', error);
+      alert('Failed to delete image. Please try again.');
+    }
+  };
+
+  const handleDeleteVideo = async (videoId: string, muxAssetId?: string) => {
+    if (!confirm('Are you sure you want to delete this video?')) {
+      return;
+    }
+
+    try {
+      // Delete from Mux first if muxAssetId exists
+      if (muxAssetId) {
+        try {
+          await deleteMuxAsset({ assetId: muxAssetId });
+          console.log(`✅ Deleted Mux asset: ${muxAssetId}`);
+        } catch (error) {
+          console.error(`Failed to delete Mux asset ${muxAssetId}:`, error);
+          // Continue with database deletion even if Mux deletion fails
+        }
+      }
+
+      // Delete from database
+      await deleteMedia({ id: videoId as any });
+      // Remove from uploadedMediaIds if it's there
+      setUploadedMediaIds((prev) => prev.filter((id) => id !== videoId));
+    } catch (error) {
+      console.error('Failed to delete video:', error);
+      alert('Failed to delete video. Please try again.');
     }
   };
 
@@ -802,6 +844,118 @@ export default function EditBusinessStory() {
                 ]}
               />
             </div>
+
+            {/* Existing Media */}
+            {(story?.media?.images && story.media.images.length > 0) ||
+            (story?.media?.videos && story.media.videos.length > 0) ? (
+              <div className='mt-8 pt-8 border-t border-border'>
+                <h3 className='text-sm font-semibold text-foreground mb-6'>
+                  Existing Media
+                </h3>
+
+                {/* Existing Images */}
+                {story?.media?.images && story.media.images.length > 0 && (
+                  <div className='mb-8'>
+                    <h4 className='text-xs font-semibold text-foreground/70 mb-4 uppercase tracking-wider'>
+                      Images ({story.media.images.length})
+                    </h4>
+                    <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'>
+                      {story.media.images.map((image: any) => (
+                        <div
+                          key={image._id}
+                          className='relative group bg-secondary/30 rounded-lg overflow-hidden border border-border'
+                        >
+                          <div className='aspect-square relative'>
+                            <img
+                              src={image.url}
+                              alt={image.filename}
+                              className='w-full h-full object-cover'
+                            />
+                            <div className='absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors duration-200 flex items-center justify-center'>
+                              <button
+                                onClick={() => handleDeleteImage(image._id)}
+                                className='opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90'
+                                title='Delete image'
+                              >
+                                <Trash2 className='w-4 h-4' />
+                              </button>
+                            </div>
+                          </div>
+                          <div className='p-2'>
+                            <p className='text-xs text-foreground/60 truncate'>
+                              {image.filename}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Existing Videos */}
+                {story?.media?.videos && story.media.videos.length > 0 && (
+                  <div>
+                    <h4 className='text-xs font-semibold text-foreground/70 mb-4 uppercase tracking-wider'>
+                      Videos ({story.media.videos.length})
+                    </h4>
+                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                      {story.media.videos.map((video: any) => (
+                        <div
+                          key={video._id}
+                          className='relative group bg-secondary/30 rounded-lg overflow-hidden border border-border'
+                        >
+                          <div className='aspect-video relative'>
+                            {video.thumbnailUrl ? (
+                              <img
+                                src={video.thumbnailUrl}
+                                alt={video.filename}
+                                className='w-full h-full object-cover'
+                              />
+                            ) : (
+                              <div className='w-full h-full bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center'>
+                                <Video className='w-12 h-12 text-foreground/40' />
+                              </div>
+                            )}
+                            <div className='absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors duration-200 flex items-center justify-center'>
+                              <button
+                                onClick={() =>
+                                  handleDeleteVideo(video._id, video.muxAssetId)
+                                }
+                                className='opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90'
+                                title='Delete video'
+                              >
+                                <Trash2 className='w-4 h-4' />
+                              </button>
+                            </div>
+                            <div className='absolute top-2 left-2'>
+                              <div className='bg-foreground/80 text-background px-2 py-1 rounded text-xs font-semibold flex items-center space-x-1'>
+                                <Video className='w-3 h-3' />
+                                <span>Video</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className='p-3'>
+                            <p className='text-sm text-foreground font-medium truncate mb-1'>
+                              {video.filename}
+                            </p>
+                            {video.muxPlaybackId && (
+                              <p className='text-xs text-foreground/50'>
+                                Ready to play
+                              </p>
+                            )}
+                            {!video.muxPlaybackId && (
+                              <p className='text-xs text-foreground/50'>
+                                Processing...
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
         </div>
       </form>

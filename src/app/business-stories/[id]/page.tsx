@@ -190,8 +190,8 @@ export default function BusinessStoryPage() {
       {/* Video Player Section */}
       {hasVideos && (
         <section ref={videoSectionRef} className='py-16'>
-          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-            <div className='bg-card rounded-xl p-8 metallic-border'>
+          <div className='max-w-7xl mx-auto px-0 sm:px-6 lg:px-8'>
+            <div className='bg-card rounded-xl py-8 px-4 md:px-8'>
               <h2 className='text-2xl font-bold text-foreground mb-6'>
                 Watch the Full Documentary
               </h2>
@@ -205,18 +205,9 @@ export default function BusinessStoryPage() {
                         playbackId={playbackId}
                         title={story.title}
                         poster={video.thumbnailUrl}
-                        className='w-full h-[600px]'
+                        className='w-full h-[250px] md:h-[600px]'
                       />
-                    ) : (
-                      <div className='w-full h-[600px] bg-gradient-to-br from-accent/20 to-primary/20 rounded-lg flex items-center justify-center'>
-                        <div className='text-center'>
-                          <Play className='w-12 h-12 text-accent-foreground ml-1 mx-auto mb-2' />
-                          <p className='text-foreground/70'>
-                            Video processing...
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                    ) : null}
                   </div>
                 );
               })}

@@ -169,11 +169,6 @@ export default function AdminLayout({
               >
                 View Site
               </Link>
-              <div className='w-px h-6 bg-border' />
-              <button className='bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center space-x-2'>
-                <Plus className='w-4 h-4' />
-                <span>New Content</span>
-              </button>
             </div>
           </div>
         </header>

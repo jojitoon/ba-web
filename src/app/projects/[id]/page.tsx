@@ -14,6 +14,7 @@ import {
   Camera,
   Play,
   CheckCircle,
+  ArrowLeft,
 } from "lucide-react";
 import MuxVideoPlayer from "@/components/mux-video-player";
 import FavoriteButton from "@/components/favorite-button";
