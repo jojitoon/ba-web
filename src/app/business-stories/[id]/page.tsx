@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
 import Link from 'next/link';
@@ -43,10 +44,36 @@ function getPlaybackId(video: any): string | null {
 export default function BusinessStoryPage() {
   const params = useParams();
   const storyId = params.id as string;
+  const videoSectionRef = useRef<HTMLElement>(null);
+  const videoPlayerRef = useRef<any>(null);
 
   const story = useQuery(api.businessStories.getByIdWithMedia, {
     id: storyId as any,
   });
+
+  const hasVideos = story?.media?.videos && story.media.videos.length > 0;
+
+  const handleWatchDocumentary = async () => {
+    if (videoSectionRef.current) {
+      // Scroll to video section
+      videoSectionRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+
+      // Wait for scroll to complete, then play video using MuxPlayer API
+      setTimeout(async () => {
+        try {
+          if (videoPlayerRef.current) {
+            // MuxPlayer has a play() method
+            await videoPlayerRef.current.play();
+          }
+        } catch (error) {
+          console.error('Error playing video:', error);
+        }
+      }, 500);
+    }
+  };
 
   if (story === undefined) {
     return (
@@ -133,10 +160,15 @@ export default function BusinessStoryPage() {
             </p>
 
             <div className='flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4'>
-              <button className='bg-foreground text-background px-6 py-3 font-semibold text-sm uppercase tracking-wider hover:bg-foreground/90 transition-all duration-300 flex items-center justify-center space-x-2'>
-                <Play className='w-5 h-5' />
-                <span>Watch Documentary</span>
-              </button>
+              {hasVideos && (
+                <button
+                  onClick={handleWatchDocumentary}
+                  className='bg-foreground text-background px-6 py-3 font-semibold text-sm uppercase tracking-wider hover:bg-foreground/90 transition-all duration-300 flex items-center justify-center space-x-2'
+                >
+                  <Play className='w-5 h-5' />
+                  <span>Watch Documentary</span>
+                </button>
+              )}
               <div className='flex space-x-3'>
                 <ShareButton
                   url={`/business-stories/${story._id}`}
@@ -156,8 +188,8 @@ export default function BusinessStoryPage() {
       </section>
 
       {/* Video Player Section */}
-      {story.media.videos && story.media.videos.length > 0 && (
-        <section className='py-16'>
+      {hasVideos && (
+        <section ref={videoSectionRef} className='py-16'>
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
             <div className='bg-card rounded-xl p-8 metallic-border'>
               <h2 className='text-2xl font-bold text-foreground mb-6'>
@@ -169,6 +201,7 @@ export default function BusinessStoryPage() {
                   <div key={index} className='w-full'>
                     {playbackId ? (
                       <MuxVideoPlayer
+                        ref={index === 0 ? videoPlayerRef : undefined}
                         playbackId={playbackId}
                         title={story.title}
                         poster={video.thumbnailUrl}
