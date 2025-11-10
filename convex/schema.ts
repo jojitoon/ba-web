@@ -79,6 +79,7 @@ export default defineSchema({
     fullDescription: v.optional(v.string()),
     ownerStory: v.optional(v.string()),
     views: v.optional(v.number()),
+    favoriteCount: v.optional(v.number()),
     milestones: v.array(
       v.object({
         year: v.string(),

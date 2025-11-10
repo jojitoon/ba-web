@@ -1,11 +1,11 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from 'convex/_generated/api';
 import {
   Play,
@@ -15,11 +15,13 @@ import {
   Star,
   ExternalLink,
   ArrowLeft,
+  Eye,
 } from 'lucide-react';
 import MuxVideoPlayer from '@/components/mux-video-player';
 import FavoriteButton from '@/components/favorite-button';
 import ShareButton from '@/components/share-button';
 import QRCodePlaque from '@/components/qr-code-plaque';
+import { shouldCountView } from '@/lib/analytics';
 
 // Helper function to get playbackId from video object
 function getPlaybackId(video: any): string | null {
@@ -51,7 +53,20 @@ export default function BusinessStoryPage() {
     id: storyId as any,
   });
 
+  const incrementViews = useMutation(api.businessStories.incrementViews);
+
   const hasVideos = story?.media?.videos && story.media.videos.length > 0;
+
+  // Track page view
+  useEffect(() => {
+    if (story && storyId) {
+      if (shouldCountView('businessStory', storyId)) {
+        incrementViews({ id: storyId as any }).catch((error) => {
+          console.error('Failed to increment views:', error);
+        });
+      }
+    }
+  }, [story, storyId, incrementViews]);
 
   const handleWatchDocumentary = async () => {
     if (videoSectionRef.current) {
@@ -159,6 +174,17 @@ export default function BusinessStoryPage() {
               {story.description}
             </p>
 
+            {/* Stats */}
+            <div className='flex items-center space-x-6 mb-6 sm:mb-8 text-sm text-foreground/60'>
+              <div className='flex items-center space-x-2'>
+                <Eye className='w-4 h-4' />
+                <span>
+                  {story.views ?? 0}{' '}
+                  {(story.views ?? 0) === 1 ? 'view' : 'views'}
+                </span>
+              </div>
+            </div>
+
             <div className='flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4'>
               {hasVideos && (
                 <button
@@ -180,6 +206,7 @@ export default function BusinessStoryPage() {
                   itemType='businessStory'
                   itemId={story._id}
                   className='flex-1 sm:flex-none'
+                  favoriteCount={story.favoriteCount}
                 />
               </div>
             </div>
