@@ -12,13 +12,13 @@ import {
   MapPin,
   Users,
   ArrowLeft,
-  Share2,
-  Heart,
   Camera,
   Play,
   CheckCircle,
 } from "lucide-react";
 import MuxVideoPlayer from "@/components/mux-video-player";
+import FavoriteButton from "@/components/favorite-button";
+import ShareButton from "@/components/share-button";
 
 export default function ProjectPage() {
   const params = useParams();
@@ -124,19 +124,22 @@ export default function ProjectPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-                <button className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center space-x-2">
+                <button className="bg-foreground text-background px-6 py-3 font-semibold text-sm uppercase tracking-wider hover:bg-foreground/90 transition-all duration-300 flex items-center justify-center space-x-2">
                   <Play className="w-5 h-5" />
                   <span>View Timeline</span>
                 </button>
                 <div className="flex space-x-3">
-                  <button className="bg-card border border-border px-4 sm:px-6 py-3 rounded-lg font-semibold hover:bg-secondary transition-colors flex items-center justify-center space-x-2 flex-1 sm:flex-none">
-                    <Share2 className="w-5 h-5" />
-                    <span className="hidden sm:inline">Share</span>
-                  </button>
-                  <button className="bg-card border border-border px-4 sm:px-6 py-3 rounded-lg font-semibold hover:bg-secondary transition-colors flex items-center justify-center space-x-2 flex-1 sm:flex-none">
-                    <Heart className="w-5 h-5" />
-                    <span className="hidden sm:inline">Save</span>
-                  </button>
+                  <ShareButton
+                    url={`/projects/${project._id}`}
+                    title={project.title}
+                    description={project.description}
+                    className="flex-1 sm:flex-none"
+                  />
+                  <FavoriteButton
+                    itemType="project"
+                    itemId={project._id}
+                    className="flex-1 sm:flex-none"
+                  />
                 </div>
               </div>
             </div>

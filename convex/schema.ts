@@ -132,4 +132,22 @@ export default defineSchema({
     createdAt: v.number(),
     lastLoginAt: v.optional(v.number()),
   }),
+
+  publicUsers: defineTable({
+    email: v.string(),
+    name: v.optional(v.string()),
+    passwordHash: v.string(), // In production, use proper hashing
+    createdAt: v.number(),
+    lastLoginAt: v.optional(v.number()),
+  })
+    .index("by_email", ["email"]),
+
+  favorites: defineTable({
+    userId: v.string(), // Email or user identifier
+    itemType: v.union(v.literal("project"), v.literal("businessStory")),
+    itemId: v.string(), // Store as string to handle both project and businessStory IDs
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_item", ["itemType", "itemId"]),
 });

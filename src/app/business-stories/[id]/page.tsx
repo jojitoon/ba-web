@@ -13,12 +13,12 @@ import {
   Calendar,
   Star,
   ArrowLeft,
-  Share2,
-  Heart,
   QrCode,
   ExternalLink,
 } from 'lucide-react';
 import MuxVideoPlayer from '@/components/mux-video-player';
+import FavoriteButton from '@/components/favorite-button';
+import ShareButton from '@/components/share-button';
 
 // Helper function to get playbackId from video object
 function getPlaybackId(video: any): string | null {
@@ -143,19 +143,22 @@ export default function BusinessStoryPage() {
             </p>
 
             <div className='flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4'>
-              <button className='bg-accent text-accent-foreground px-6 py-3 rounded-lg font-semibold hover:bg-accent/90 transition-colors flex items-center justify-center space-x-2'>
+              <button className='bg-foreground text-background px-6 py-3 font-semibold text-sm uppercase tracking-wider hover:bg-foreground/90 transition-all duration-300 flex items-center justify-center space-x-2'>
                 <Play className='w-5 h-5' />
                 <span>Watch Documentary</span>
               </button>
               <div className='flex space-x-3'>
-                <button className='bg-card border border-border px-4 sm:px-6 py-3 rounded-lg font-semibold hover:bg-secondary transition-colors flex items-center justify-center space-x-2 flex-1 sm:flex-none'>
-                  <Share2 className='w-5 h-5' />
-                  <span className='hidden sm:inline'>Share</span>
-                </button>
-                <button className='bg-card border border-border px-4 sm:px-6 py-3 rounded-lg font-semibold hover:bg-secondary transition-colors flex items-center justify-center space-x-2 flex-1 sm:flex-none'>
-                  <Heart className='w-5 h-5' />
-                  <span className='hidden sm:inline'>Save</span>
-                </button>
+                <ShareButton
+                  url={`/business-stories/${story._id}`}
+                  title={story.title}
+                  description={story.description}
+                  className="flex-1 sm:flex-none"
+                />
+                <FavoriteButton
+                  itemType="businessStory"
+                  itemId={story._id}
+                  className="flex-1 sm:flex-none"
+                />
               </div>
             </div>
           </div>
