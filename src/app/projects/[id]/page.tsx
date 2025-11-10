@@ -1,10 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import Navigation from "@/components/navigation";
 import Footer from "@/components/footer";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import {
   Building2,
@@ -15,10 +16,12 @@ import {
   Play,
   CheckCircle,
   ArrowLeft,
+  Eye,
 } from "lucide-react";
 import MuxVideoPlayer from "@/components/mux-video-player";
 import FavoriteButton from "@/components/favorite-button";
 import ShareButton from "@/components/share-button";
+import { shouldCountView } from "@/lib/analytics";
 
 export default function ProjectPage() {
   const params = useParams();
@@ -28,7 +31,18 @@ export default function ProjectPage() {
     id: projectId as any,
   });
 
-  console.log("project:", project);
+  const incrementViews = useMutation(api.projects.incrementViews);
+
+  // Track page view
+  useEffect(() => {
+    if (project && projectId) {
+      if (shouldCountView("project", projectId)) {
+        incrementViews({ id: projectId as any }).catch((error) => {
+          console.error("Failed to increment views:", error);
+        });
+      }
+    }
+  }, [project, projectId, incrementViews]);
 
   if (project === undefined) {
     return (
@@ -112,6 +126,17 @@ export default function ProjectPage() {
               <p className="text-base sm:text-lg text-foreground/80 mb-6 sm:mb-8 leading-relaxed">
                 {project.description}
               </p>
+
+              {/* Stats */}
+              <div className="flex items-center space-x-6 mb-6 sm:mb-8 text-sm text-foreground/60">
+                <div className="flex items-center space-x-2">
+                  <Eye className="w-4 h-4" />
+                  <span>
+                    {project.views ?? 0}{" "}
+                    {(project.views ?? 0) === 1 ? "view" : "views"}
+                  </span>
+                </div>
+              </div>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
                 <button className="bg-foreground text-background px-6 py-3 font-semibold text-sm uppercase tracking-wider hover:bg-foreground/90 transition-all duration-300 flex items-center justify-center space-x-2">

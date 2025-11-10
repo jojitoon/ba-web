@@ -55,6 +55,7 @@ export default defineSchema({
         image: v.optional(v.string()), // Convex storage ID
       })
     ),
+    views: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   }),

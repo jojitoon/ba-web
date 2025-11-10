@@ -216,3 +216,12 @@ export const deleteProject = mutation({
     await ctx.db.delete(id);
   },
 });
+
+export const incrementViews = mutation({
+  args: { id: v.id("projects") },
+  handler: async (ctx, args) => {
+    const project = await ctx.db.get(args.id);
+    if (!project) return;
+    await ctx.db.patch(args.id, { views: (project.views ?? 0) + 1 });
+  },
+});
