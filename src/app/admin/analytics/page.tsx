@@ -1,116 +1,106 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery } from 'convex/react';
+import { api } from 'convex/_generated/api';
 import {
   BarChart3,
   TrendingUp,
   TrendingDown,
-  Users,
   Eye,
   Calendar,
-  Download,
-  Filter,
+  Share2,
+  Copy,
+  Heart,
   Building2,
   Video,
-  Image,
-  Clock,
 } from 'lucide-react';
-
-// Mock data - in a real app, this would come from Convex
-const analyticsData = {
-  overview: {
-    totalViews: 12543,
-    totalProjects: 24,
-    totalStories: 18,
-    totalUsers: 156,
-    viewsChange: 12.5,
-    projectsChange: 8.2,
-    storiesChange: -2.1,
-    usersChange: 15.3,
-  },
-  topProjects: [
-    { name: 'Downtown Office Complex', views: 2341, status: 'Published' },
-    { name: 'Residential Tower', views: 1892, status: 'Published' },
-    { name: 'Industrial Facility', views: 1567, status: 'Published' },
-    { name: 'University Campus', views: 1234, status: 'In Review' },
-    { name: 'Shopping Mall', views: 987, status: 'Published' },
-  ],
-  topStories: [
-    { name: 'The Family Bakery', views: 1876, status: 'Published' },
-    { name: 'The Corner Hardware Store', views: 1456, status: 'Published' },
-    { name: 'Local Restaurant Chain', views: 1234, status: 'Published' },
-    { name: 'Tech Startup Journey', views: 987, status: 'In Review' },
-    { name: 'Artisan Workshop', views: 765, status: 'Published' },
-  ],
-  recentActivity: [
-    {
-      type: 'project',
-      action: 'created',
-      name: 'New Office Building',
-      time: '2 hours ago',
-    },
-    {
-      type: 'story',
-      action: 'published',
-      name: 'Local Cafe Story',
-      time: '4 hours ago',
-    },
-    {
-      type: 'media',
-      action: 'uploaded',
-      name: 'Construction Photos',
-      time: '6 hours ago',
-    },
-    {
-      type: 'project',
-      action: 'updated',
-      name: 'Residential Complex',
-      time: '8 hours ago',
-    },
-    {
-      type: 'story',
-      action: 'reviewed',
-      name: 'Family Business',
-      time: '12 hours ago',
-    },
-  ],
-  monthlyStats: [
-    { month: 'Jan', views: 1200, projects: 2, stories: 3 },
-    { month: 'Feb', views: 1800, projects: 4, stories: 2 },
-    { month: 'Mar', views: 2200, projects: 3, stories: 4 },
-    { month: 'Apr', views: 2800, projects: 5, stories: 3 },
-    { month: 'May', views: 3200, projects: 4, stories: 5 },
-    { month: 'Jun', views: 2900, projects: 6, stories: 1 },
-  ],
-};
-
-const timeRanges = ['7 days', '30 days', '90 days', '1 year'];
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
 export default function AdminAnalytics() {
-  const [selectedTimeRange, setSelectedTimeRange] = useState('30 days');
+  const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'month'>('day');
+  const [selectedItemType, setSelectedItemType] = useState<
+    'project' | 'businessStory' | undefined
+  >(undefined);
+  const [days, setDays] = useState(30);
 
-  const getChangeIcon = (change: number) => {
-    return change >= 0 ? (
-      <TrendingUp className='w-4 h-4 text-green-500' />
-    ) : (
-      <TrendingDown className='w-4 h-4 text-red-500' />
-    );
-  };
+  const trends = useQuery(api.analytics.getAnalyticsTrends, {
+    itemType: selectedItemType,
+    period: selectedPeriod,
+    days,
+  });
 
-  const getChangeColor = (change: number) => {
-    return change >= 0 ? 'text-green-500' : 'text-red-500';
-  };
+  const topProjects = useQuery(api.analytics.getTopItems, {
+    itemType: 'project',
+    metric: 'views',
+    limit: 5,
+  });
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'project':
-        return <Building2 className='w-4 h-4 text-primary' />;
-      case 'story':
-        return <Video className='w-4 h-4 text-accent' />;
-      case 'media':
-        return <Image className='w-4 h-4 text-primary' />;
-      default:
-        return <Clock className='w-4 h-4 text-foreground/60' />;
+  const topStories = useQuery(api.analytics.getTopItems, {
+    itemType: 'businessStory',
+    metric: 'views',
+    limit: 5,
+  });
+
+  const topProjectsShares = useQuery(api.analytics.getTopItems, {
+    itemType: 'project',
+    metric: 'shares',
+    limit: 5,
+  });
+
+  const topStoriesShares = useQuery(api.analytics.getTopItems, {
+    itemType: 'businessStory',
+    metric: 'shares',
+    limit: 5,
+  });
+
+  const topProjectsSaves = useQuery(api.analytics.getTopItems, {
+    itemType: 'project',
+    metric: 'favorites',
+    limit: 5,
+  });
+
+  const topStoriesSaves = useQuery(api.analytics.getTopItems, {
+    itemType: 'businessStory',
+    metric: 'favorites',
+    limit: 5,
+  });
+
+  // Calculate totals from trends
+  const totals = trends
+    ? trends.reduce(
+        (acc, day) => ({
+          views: acc.views + day.views,
+          shares: acc.shares + day.shares,
+          copies: acc.copies + day.copies,
+          favorites: acc.favorites + day.favorites,
+        }),
+        { views: 0, shares: 0, copies: 0, favorites: 0 }
+      )
+    : { views: 0, shares: 0, copies: 0, favorites: 0 };
+
+  // Format date for display
+  const formatDate = (dateStr: string) => {
+    if (selectedPeriod === 'day') {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } else {
+      const [year, month] = dateStr.split('-');
+      return new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString(
+        'en-US',
+        { month: 'short', year: 'numeric' }
+      );
     }
   };
 
@@ -121,275 +111,447 @@ export default function AdminAnalytics() {
         <div>
           <h1 className='text-3xl font-bold text-foreground'>Analytics</h1>
           <p className='text-foreground/70 mt-1'>
-            Track your content performance and user engagement.
+            Track views, shares, and saves for projects and stories
           </p>
-        </div>
-        <div className='mt-4 sm:mt-0 flex space-x-3'>
-          <div className='relative'>
-            <Filter className='absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground/50 w-5 h-5' />
-            <select
-              value={selectedTimeRange}
-              onChange={(e) => setSelectedTimeRange(e.target.value)}
-              className='pl-10 pr-8 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none min-w-[120px]'
-            >
-              {timeRanges.map((range) => (
-                <option key={range} value={range}>
-                  {range}
-                </option>
-              ))}
-            </select>
-          </div>
-          <button className='bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center space-x-2'>
-            <Download className='w-5 h-5' />
-            <span>Export Data</span>
-          </button>
         </div>
       </div>
 
-      {/* Overview Stats */}
+      {/* Filters */}
+      <div className='bg-card rounded-xl p-6 metallic-border'>
+        <div className='flex flex-wrap items-center gap-4'>
+          <div className='flex items-center space-x-2'>
+            <label className='text-sm font-medium text-foreground'>
+              Period:
+            </label>
+            <select
+              value={selectedPeriod}
+              onChange={(e) =>
+                setSelectedPeriod(e.target.value as 'day' | 'month')
+              }
+              className='px-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-accent'
+            >
+              <option value='day'>Daily</option>
+              <option value='month'>Monthly</option>
+            </select>
+          </div>
+
+          <div className='flex items-center space-x-2'>
+            <label className='text-sm font-medium text-foreground'>
+              Type:
+            </label>
+            <select
+              value={selectedItemType || 'all'}
+              onChange={(e) =>
+                setSelectedItemType(
+                  e.target.value === 'all'
+                    ? undefined
+                    : (e.target.value as 'project' | 'businessStory')
+                )
+              }
+              className='px-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-accent'
+            >
+              <option value='all'>All</option>
+              <option value='project'>Projects</option>
+              <option value='businessStory'>Stories</option>
+            </select>
+          </div>
+
+          <div className='flex items-center space-x-2'>
+            <label className='text-sm font-medium text-foreground'>
+              Days:
+            </label>
+            <select
+              value={days}
+              onChange={(e) => setDays(parseInt(e.target.value))}
+              className='px-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-accent'
+            >
+              <option value={7}>7 days</option>
+              <option value={30}>30 days</option>
+              <option value={90}>90 days</option>
+              <option value={365}>1 year</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Overview */}
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
         <div className='bg-card rounded-xl p-6 metallic-border'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-sm text-foreground/60'>Total Views</p>
-              <p className='text-3xl font-bold text-foreground mt-1'>
-                {analyticsData.overview.totalViews.toLocaleString()}
-              </p>
-              <div className='flex items-center space-x-1 mt-2'>
-                {getChangeIcon(analyticsData.overview.viewsChange)}
-                <span
-                  className={`text-sm font-medium ${getChangeColor(
-                    analyticsData.overview.viewsChange
-                  )}`}
-                >
-                  {analyticsData.overview.viewsChange > 0 ? '+' : ''}
-                  {analyticsData.overview.viewsChange}%
-                </span>
-                <span className='text-sm text-foreground/60'>
-                  vs last month
-                </span>
-              </div>
-            </div>
+          <div className='flex items-center justify-between mb-4'>
             <div className='w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center'>
               <Eye className='w-6 h-6 text-primary' />
             </div>
           </div>
+          <h3 className='text-2xl font-bold text-foreground mb-1'>
+            {totals.views.toLocaleString()}
+          </h3>
+          <p className='text-sm text-foreground/60'>Total Views</p>
         </div>
 
         <div className='bg-card rounded-xl p-6 metallic-border'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-sm text-foreground/60'>Total Projects</p>
-              <p className='text-3xl font-bold text-foreground mt-1'>
-                {analyticsData.overview.totalProjects}
-              </p>
-              <div className='flex items-center space-x-1 mt-2'>
-                {getChangeIcon(analyticsData.overview.projectsChange)}
-                <span
-                  className={`text-sm font-medium ${getChangeColor(
-                    analyticsData.overview.projectsChange
-                  )}`}
-                >
-                  {analyticsData.overview.projectsChange > 0 ? '+' : ''}
-                  {analyticsData.overview.projectsChange}%
-                </span>
-                <span className='text-sm text-foreground/60'>
-                  vs last month
-                </span>
-              </div>
-            </div>
-            <div className='w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center'>
-              <Building2 className='w-6 h-6 text-primary' />
-            </div>
-          </div>
-        </div>
-
-        <div className='bg-card rounded-xl p-6 metallic-border'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-sm text-foreground/60'>Business Stories</p>
-              <p className='text-3xl font-bold text-foreground mt-1'>
-                {analyticsData.overview.totalStories}
-              </p>
-              <div className='flex items-center space-x-1 mt-2'>
-                {getChangeIcon(analyticsData.overview.storiesChange)}
-                <span
-                  className={`text-sm font-medium ${getChangeColor(
-                    analyticsData.overview.storiesChange
-                  )}`}
-                >
-                  {analyticsData.overview.storiesChange > 0 ? '+' : ''}
-                  {analyticsData.overview.storiesChange}%
-                </span>
-                <span className='text-sm text-foreground/60'>
-                  vs last month
-                </span>
-              </div>
-            </div>
+          <div className='flex items-center justify-between mb-4'>
             <div className='w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center'>
-              <Video className='w-6 h-6 text-accent' />
+              <Share2 className='w-6 h-6 text-accent' />
             </div>
           </div>
+          <h3 className='text-2xl font-bold text-foreground mb-1'>
+            {totals.shares.toLocaleString()}
+          </h3>
+          <p className='text-sm text-foreground/60'>Share Clicks</p>
         </div>
 
         <div className='bg-card rounded-xl p-6 metallic-border'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-sm text-foreground/60'>Total Users</p>
-              <p className='text-3xl font-bold text-foreground mt-1'>
-                {analyticsData.overview.totalUsers}
-              </p>
-              <div className='flex items-center space-x-1 mt-2'>
-                {getChangeIcon(analyticsData.overview.usersChange)}
-                <span
-                  className={`text-sm font-medium ${getChangeColor(
-                    analyticsData.overview.usersChange
-                  )}`}
-                >
-                  {analyticsData.overview.usersChange > 0 ? '+' : ''}
-                  {analyticsData.overview.usersChange}%
-                </span>
-                <span className='text-sm text-foreground/60'>
-                  vs last month
-                </span>
-              </div>
-            </div>
+          <div className='flex items-center justify-between mb-4'>
             <div className='w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center'>
-              <Users className='w-6 h-6 text-primary' />
+              <Copy className='w-6 h-6 text-primary' />
             </div>
           </div>
+          <h3 className='text-2xl font-bold text-foreground mb-1'>
+            {totals.copies.toLocaleString()}
+          </h3>
+          <p className='text-sm text-foreground/60'>Link Copies</p>
         </div>
-      </div>
 
-      {/* Charts and Tables */}
-      <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
-        {/* Top Performing Projects */}
         <div className='bg-card rounded-xl p-6 metallic-border'>
-          <div className='flex items-center justify-between mb-6'>
-            <h2 className='text-xl font-bold text-foreground'>
-              Top Performing Projects
-            </h2>
-            <BarChart3 className='w-6 h-6 text-primary' />
-          </div>
-          <div className='space-y-4'>
-            {analyticsData.topProjects.map((project, index) => (
-              <div
-                key={index}
-                className='flex items-center justify-between p-4 bg-background rounded-lg'
-              >
-                <div className='flex-1'>
-                  <h3 className='font-semibold text-foreground'>
-                    {project.name}
-                  </h3>
-                  <div className='flex items-center space-x-2 mt-1'>
-                    <span className='text-sm text-foreground/60'>
-                      {project.views.toLocaleString()} views
-                    </span>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        project.status === 'Published'
-                          ? 'bg-primary/20 text-primary'
-                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-                      }`}
-                    >
-                      {project.status}
-                    </span>
-                  </div>
-                </div>
-                <div className='text-2xl font-bold text-foreground/20'>
-                  #{index + 1}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Top Performing Stories */}
-        <div className='bg-card rounded-xl p-6 metallic-border'>
-          <div className='flex items-center justify-between mb-6'>
-            <h2 className='text-xl font-bold text-foreground'>
-              Top Performing Stories
-            </h2>
-            <Video className='w-6 h-6 text-accent' />
-          </div>
-          <div className='space-y-4'>
-            {analyticsData.topStories.map((story, index) => (
-              <div
-                key={index}
-                className='flex items-center justify-between p-4 bg-background rounded-lg'
-              >
-                <div className='flex-1'>
-                  <h3 className='font-semibold text-foreground'>
-                    {story.name}
-                  </h3>
-                  <div className='flex items-center space-x-2 mt-1'>
-                    <span className='text-sm text-foreground/60'>
-                      {story.views.toLocaleString()} views
-                    </span>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        story.status === 'Published'
-                          ? 'bg-accent/20 text-accent'
-                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-                      }`}
-                    >
-                      {story.status}
-                    </span>
-                  </div>
-                </div>
-                <div className='text-2xl font-bold text-foreground/20'>
-                  #{index + 1}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className='bg-card rounded-xl p-6 metallic-border'>
-        <div className='flex items-center justify-between mb-6'>
-          <h2 className='text-xl font-bold text-foreground'>Recent Activity</h2>
-          <Clock className='w-6 h-6 text-primary' />
-        </div>
-        <div className='space-y-4'>
-          {analyticsData.recentActivity.map((activity, index) => (
-            <div
-              key={index}
-              className='flex items-center space-x-4 p-4 bg-background rounded-lg'
-            >
-              <div className='w-10 h-10 bg-secondary rounded-lg flex items-center justify-center'>
-                {getActivityIcon(activity.type)}
-              </div>
-              <div className='flex-1'>
-                <p className='text-foreground'>
-                  <span className='font-medium'>{activity.name}</span> was{' '}
-                  {activity.action}
-                </p>
-                <p className='text-sm text-foreground/60'>{activity.time}</p>
-              </div>
+          <div className='flex items-center justify-between mb-4'>
+            <div className='w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center'>
+              <Heart className='w-6 h-6 text-accent' />
             </div>
-          ))}
+          </div>
+          <h3 className='text-2xl font-bold text-foreground mb-1'>
+            {totals.favorites.toLocaleString()}
+          </h3>
+          <p className='text-sm text-foreground/60'>Saves</p>
         </div>
       </div>
 
-      {/* Monthly Stats Chart Placeholder */}
-      <div className='bg-card rounded-xl p-6 metallic-border'>
-        <div className='flex items-center justify-between mb-6'>
-          <h2 className='text-xl font-bold text-foreground'>
-            Monthly Performance
+      {/* Trends Chart */}
+      {trends && trends.length > 0 && (
+        <div className='bg-card rounded-xl p-6 metallic-border'>
+          <h2 className='text-xl font-bold text-foreground mb-6'>
+            Trends Over Time
           </h2>
-          <Calendar className='w-6 h-6 text-primary' />
+          <ResponsiveContainer width='100%' height={400}>
+            <LineChart data={trends}>
+              <CartesianGrid strokeDasharray='3 3' stroke='oklch(0.9 0 0)' />
+              <XAxis
+                dataKey='date'
+                tickFormatter={formatDate}
+                stroke='oklch(0.45 0 0)'
+                style={{ fontSize: '12px' }}
+              />
+              <YAxis stroke='oklch(0.45 0 0)' style={{ fontSize: '12px' }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'oklch(1 0 0)',
+                  border: '1px solid oklch(0.9 0 0)',
+                  borderRadius: '8px',
+                }}
+                labelFormatter={(label) => formatDate(label)}
+              />
+              <Legend />
+              <Line
+                type='monotone'
+                dataKey='views'
+                stroke='oklch(0.25 0 0)'
+                strokeWidth={2}
+                name='Views'
+                dot={{ r: 4 }}
+              />
+              <Line
+                type='monotone'
+                dataKey='shares'
+                stroke='oklch(0.4 0 0)'
+                strokeWidth={2}
+                name='Shares'
+                dot={{ r: 4 }}
+              />
+              <Line
+                type='monotone'
+                dataKey='copies'
+                stroke='oklch(0.5 0 0)'
+                strokeWidth={2}
+                name='Copies'
+                dot={{ r: 4 }}
+              />
+              <Line
+                type='monotone'
+                dataKey='favorites'
+                stroke='oklch(0.55 0.22 25)'
+                strokeWidth={2}
+                name='Saves'
+                dot={{ r: 4 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
-        <div className='h-64 bg-background rounded-lg flex items-center justify-center'>
-          <div className='text-center'>
-            <BarChart3 className='w-16 h-16 text-foreground/30 mx-auto mb-4' />
-            <p className='text-foreground/60'>
-              Chart visualization would be implemented here
-            </p>
-            <p className='text-sm text-foreground/40 mt-1'>
-              Using a charting library like Chart.js or Recharts
-            </p>
+      )}
+
+      {/* Bar Chart */}
+      {trends && trends.length > 0 && (
+        <div className='bg-card rounded-xl p-6 metallic-border'>
+          <h2 className='text-xl font-bold text-foreground mb-6'>
+            Activity Breakdown
+          </h2>
+          <ResponsiveContainer width='100%' height={400}>
+            <BarChart data={trends}>
+              <CartesianGrid strokeDasharray='3 3' stroke='oklch(0.9 0 0)' />
+              <XAxis
+                dataKey='date'
+                tickFormatter={formatDate}
+                stroke='oklch(0.45 0 0)'
+                style={{ fontSize: '12px' }}
+              />
+              <YAxis stroke='oklch(0.45 0 0)' style={{ fontSize: '12px' }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'oklch(1 0 0)',
+                  border: '1px solid oklch(0.9 0 0)',
+                  borderRadius: '8px',
+                }}
+                labelFormatter={(label) => formatDate(label)}
+              />
+              <Legend />
+              <Bar dataKey='views' fill='oklch(0.25 0 0)' name='Views' />
+              <Bar dataKey='shares' fill='oklch(0.4 0 0)' name='Shares' />
+              <Bar dataKey='copies' fill='oklch(0.5 0 0)' name='Copies' />
+              <Bar
+                dataKey='favorites'
+                fill='oklch(0.55 0.22 25)'
+                name='Saves'
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Top Items */}
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+        {/* Top Projects by Views */}
+        <div className='bg-card rounded-xl p-6 metallic-border'>
+          <div className='flex items-center space-x-2 mb-6'>
+            <Building2 className='w-5 h-5 text-primary' />
+            <h2 className='text-xl font-bold text-foreground'>
+              Top Projects (Views)
+            </h2>
+          </div>
+          <div className='space-y-4'>
+            {topProjects && topProjects.length > 0 ? (
+              topProjects.map((project, index) => (
+                <div
+                  key={project.id}
+                  className='flex items-center justify-between p-4 bg-background rounded-lg'
+                >
+                  <div className='flex items-center space-x-3'>
+                    <div className='w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-sm font-bold text-primary'>
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className='font-medium text-foreground'>
+                        {project.title}
+                      </p>
+                      <p className='text-sm text-foreground/60'>
+                        {project.count} views
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className='text-foreground/60 text-center py-8'>
+                No data available
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Top Stories by Views */}
+        <div className='bg-card rounded-xl p-6 metallic-border'>
+          <div className='flex items-center space-x-2 mb-6'>
+            <Video className='w-5 h-5 text-accent' />
+            <h2 className='text-xl font-bold text-foreground'>
+              Top Stories (Views)
+            </h2>
+          </div>
+          <div className='space-y-4'>
+            {topStories && topStories.length > 0 ? (
+              topStories.map((story, index) => (
+                <div
+                  key={story.id}
+                  className='flex items-center justify-between p-4 bg-background rounded-lg'
+                >
+                  <div className='flex items-center space-x-3'>
+                    <div className='w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center text-sm font-bold text-accent'>
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className='font-medium text-foreground'>
+                        {story.title}
+                      </p>
+                      <p className='text-sm text-foreground/60'>
+                        {story.count} views
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className='text-foreground/60 text-center py-8'>
+                No data available
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Top Projects by Shares */}
+        <div className='bg-card rounded-xl p-6 metallic-border'>
+          <div className='flex items-center space-x-2 mb-6'>
+            <Share2 className='w-5 h-5 text-primary' />
+            <h2 className='text-xl font-bold text-foreground'>
+              Top Projects (Shares)
+            </h2>
+          </div>
+          <div className='space-y-4'>
+            {topProjectsShares && topProjectsShares.length > 0 ? (
+              topProjectsShares.map((project, index) => (
+                <div
+                  key={project.id}
+                  className='flex items-center justify-between p-4 bg-background rounded-lg'
+                >
+                  <div className='flex items-center space-x-3'>
+                    <div className='w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-sm font-bold text-primary'>
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className='font-medium text-foreground'>
+                        {project.title}
+                      </p>
+                      <p className='text-sm text-foreground/60'>
+                        {project.count} shares
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className='text-foreground/60 text-center py-8'>
+                No data available
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Top Stories by Shares */}
+        <div className='bg-card rounded-xl p-6 metallic-border'>
+          <div className='flex items-center space-x-2 mb-6'>
+            <Share2 className='w-5 h-5 text-accent' />
+            <h2 className='text-xl font-bold text-foreground'>
+              Top Stories (Shares)
+            </h2>
+          </div>
+          <div className='space-y-4'>
+            {topStoriesShares && topStoriesShares.length > 0 ? (
+              topStoriesShares.map((story, index) => (
+                <div
+                  key={story.id}
+                  className='flex items-center justify-between p-4 bg-background rounded-lg'
+                >
+                  <div className='flex items-center space-x-3'>
+                    <div className='w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center text-sm font-bold text-accent'>
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className='font-medium text-foreground'>
+                        {story.title}
+                      </p>
+                      <p className='text-sm text-foreground/60'>
+                        {story.count} shares
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className='text-foreground/60 text-center py-8'>
+                No data available
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Top Projects by Saves */}
+        <div className='bg-card rounded-xl p-6 metallic-border'>
+          <div className='flex items-center space-x-2 mb-6'>
+            <Heart className='w-5 h-5 text-primary' />
+            <h2 className='text-xl font-bold text-foreground'>
+              Top Projects (Saves)
+            </h2>
+          </div>
+          <div className='space-y-4'>
+            {topProjectsSaves && topProjectsSaves.length > 0 ? (
+              topProjectsSaves.map((project, index) => (
+                <div
+                  key={project.id}
+                  className='flex items-center justify-between p-4 bg-background rounded-lg'
+                >
+                  <div className='flex items-center space-x-3'>
+                    <div className='w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-sm font-bold text-primary'>
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className='font-medium text-foreground'>
+                        {project.title}
+                      </p>
+                      <p className='text-sm text-foreground/60'>
+                        {project.count} saves
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className='text-foreground/60 text-center py-8'>
+                No data available
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Top Stories by Saves */}
+        <div className='bg-card rounded-xl p-6 metallic-border'>
+          <div className='flex items-center space-x-2 mb-6'>
+            <Heart className='w-5 h-5 text-accent' />
+            <h2 className='text-xl font-bold text-foreground'>
+              Top Stories (Saves)
+            </h2>
+          </div>
+          <div className='space-y-4'>
+            {topStoriesSaves && topStoriesSaves.length > 0 ? (
+              topStoriesSaves.map((story, index) => (
+                <div
+                  key={story.id}
+                  className='flex items-center justify-between p-4 bg-background rounded-lg'
+                >
+                  <div className='flex items-center space-x-3'>
+                    <div className='w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center text-sm font-bold text-accent'>
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className='font-medium text-foreground'>
+                        {story.title}
+                      </p>
+                      <p className='text-sm text-foreground/60'>
+                        {story.count} saves
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className='text-foreground/60 text-center py-8'>
+                No data available
+              </p>
+            )}
           </div>
         </div>
       </div>

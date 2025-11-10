@@ -152,4 +152,19 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_item", ["itemType", "itemId"]),
+
+  analyticsEvents: defineTable({
+    eventType: v.union(
+      v.literal("view"),
+      v.literal("share_click"),
+      v.literal("link_copy"),
+      v.literal("favorite")
+    ),
+    itemType: v.union(v.literal("project"), v.literal("businessStory")),
+    itemId: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_item", ["itemType", "itemId"])
+    .index("by_type", ["eventType"])
+    .index("by_date", ["createdAt"]),
 });

@@ -54,6 +54,7 @@ export default function BusinessStoryPage() {
   });
 
   const incrementViews = useMutation(api.businessStories.incrementViews);
+  const trackEvent = useMutation(api.analytics.trackEvent);
 
   const hasVideos = story?.media?.videos && story.media.videos.length > 0;
 
@@ -64,9 +65,18 @@ export default function BusinessStoryPage() {
         incrementViews({ id: storyId as any }).catch((error) => {
           console.error('Failed to increment views:', error);
         });
+
+        // Track view event in analytics
+        trackEvent({
+          eventType: 'view',
+          itemType: 'businessStory',
+          itemId: storyId,
+        }).catch((error) => {
+          console.error('Failed to track view event:', error);
+        });
       }
     }
-  }, [story, storyId, incrementViews]);
+  }, [story, storyId, incrementViews, trackEvent]);
 
   const handleWatchDocumentary = async () => {
     if (videoSectionRef.current) {
@@ -201,6 +211,8 @@ export default function BusinessStoryPage() {
                   title={story.title}
                   description={story.description}
                   className='flex-1 sm:flex-none'
+                  itemType='businessStory'
+                  itemId={story._id}
                 />
                 <FavoriteButton
                   itemType='businessStory'

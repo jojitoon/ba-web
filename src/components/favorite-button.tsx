@@ -57,6 +57,7 @@ export default function FavoriteButton({
       : favoriteCountQuery;
 
   const toggleFavorite = useMutation(api.favorites.toggleFavorite);
+  const trackEvent = useMutation(api.analytics.trackEvent);
 
   useEffect(() => {
     if (propFavoriteCount !== undefined) {
@@ -99,6 +100,17 @@ export default function FavoriteButton({
             ? localFavoriteCount + 1
             : Math.max(0, localFavoriteCount - 1)
         );
+      }
+
+      // Track favorite event in analytics (only when favorited, not when unfavorited)
+      if (result.favorited) {
+        trackEvent({
+          eventType: 'favorite',
+          itemType,
+          itemId: itemId as string,
+        }).catch((error) => {
+          console.error('Failed to track favorite event:', error);
+        });
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);

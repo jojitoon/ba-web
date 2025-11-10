@@ -3,12 +3,17 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Share2, X, Copy, Check, Facebook, Twitter, Linkedin, Mail } from "lucide-react";
+import { useMutation } from "convex/react";
+import { api } from "convex/_generated/api";
+import { Id } from "convex/_generated/dataModel";
 
 interface ShareButtonProps {
   url: string;
   title: string;
   description?: string;
   className?: string;
+  itemType: "project" | "businessStory";
+  itemId: Id<"projects"> | Id<"businessStories">;
 }
 
 export default function ShareButton({
@@ -16,10 +21,13 @@ export default function ShareButton({
   title,
   description,
   className = "",
+  itemType,
+  itemId,
 }: ShareButtonProps) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const trackEvent = useMutation(api.analytics.trackEvent);
 
   useEffect(() => {
     setMounted(true);
@@ -46,9 +54,31 @@ export default function ShareButton({
       await navigator.clipboard.writeText(fullUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      
+      // Track link copy event
+      trackEvent({
+        eventType: "link_copy",
+        itemType,
+        itemId: itemId as string,
+      }).catch((error) => {
+        console.error("Failed to track copy event:", error);
+      });
     } catch (error) {
       console.error("Failed to copy:", error);
     }
+  };
+
+  const handleShareClick = () => {
+    setShowShareModal(true);
+    
+    // Track share button click event
+    trackEvent({
+      eventType: "share_click",
+      itemType,
+      itemId: itemId as string,
+    }).catch((error) => {
+      console.error("Failed to track share event:", error);
+    });
   };
 
   const shareLinks = {
@@ -61,7 +91,7 @@ export default function ShareButton({
   return (
     <>
       <button
-        onClick={() => setShowShareModal(true)}
+        onClick={handleShareClick}
         className={`inline-flex items-center justify-center space-x-2 border-2 border-foreground text-foreground px-4 sm:px-6 py-3 font-semibold text-sm uppercase tracking-wider hover:bg-foreground hover:text-background transition-all duration-300 ${className}`}
       >
         <Share2 className="w-5 h-5" />
