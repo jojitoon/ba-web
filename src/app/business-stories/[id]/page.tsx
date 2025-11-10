@@ -12,7 +12,6 @@ import {
   MapPin,
   Calendar,
   Star,
-  ArrowLeft,
   QrCode,
   ExternalLink,
 } from 'lucide-react';
@@ -92,16 +91,6 @@ export default function BusinessStoryPage() {
       {/* Hero Section */}
       <section className='pt-20 pb-16 bg-card/30'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='mb-8'>
-            <Link
-              href='/business-stories'
-              className='inline-flex items-center space-x-2 text-foreground/70 hover:text-primary transition-colors'
-            >
-              <ArrowLeft className='w-4 h-4' />
-              <span>Back to Business Stories</span>
-            </Link>
-          </div>
-
           <div className='max-w-4xl'>
             <div className='flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-4'>
               <span className='text-sm text-accent bg-accent/10 px-3 py-1 rounded-full w-fit'>

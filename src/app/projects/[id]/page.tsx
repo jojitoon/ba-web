@@ -11,7 +11,6 @@ import {
   Calendar,
   MapPin,
   Users,
-  ArrowLeft,
   Camera,
   Play,
   CheckCircle,
@@ -73,16 +72,6 @@ export default function ProjectPage() {
 
       <section className="pt-20 pb-16 bg-card/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <Link
-              href="/projects"
-              className="inline-flex items-center space-x-2 text-foreground/70 hover:text-primary transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to Projects</span>
-            </Link>
-          </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-4">

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Share2, X, Copy, Check, Facebook, Twitter, Linkedin, Mail } from "lucide-react";
 
 interface ShareButtonProps {
@@ -18,6 +19,24 @@ export default function ShareButton({
 }: ShareButtonProps) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showShareModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showShareModal]);
 
   const fullUrl = typeof window !== "undefined" ? `${window.location.origin}${url}` : url;
   const shareText = description || title;
@@ -49,8 +68,15 @@ export default function ShareButton({
         <span className="hidden sm:inline">Share</span>
       </button>
 
-      {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+      {showShareModal && mounted && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/60 backdrop-blur-sm"
+          onClick={(e) => {
+            // Close modal when clicking the overlay
+            if (e.target === e.currentTarget) {
+              setShowShareModal(false);
+            }
+          }}
+        >
           <div className="relative bg-background border border-border w-full max-w-md mx-4 p-8 editorial-card">
             <button
               onClick={() => setShowShareModal(false)}
@@ -147,7 +173,8 @@ export default function ShareButton({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
