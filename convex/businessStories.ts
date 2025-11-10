@@ -1,5 +1,5 @@
-import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { mutation, query } from './_generated/server';
+import { v } from 'convex/values';
 
 export const list = query({
   args: {
@@ -7,22 +7,22 @@ export const list = query({
     category: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    let query = ctx.db.query("businessStories");
+    let query = ctx.db.query('businessStories');
 
-    if (args.status && args.status !== "All") {
-      query = query.filter((q) => q.eq(q.field("status"), args.status));
+    if (args.status && args.status !== 'All') {
+      query = query.filter((q) => q.eq(q.field('status'), args.status));
     }
 
-    if (args.category && args.category !== "All") {
-      query = query.filter((q) => q.eq(q.field("category"), args.category));
+    if (args.category && args.category !== 'All') {
+      query = query.filter((q) => q.eq(q.field('category'), args.category));
     }
 
-    return await query.order("desc").collect();
+    return await query.order('desc').collect();
   },
 });
 
 export const get = query({
-  args: { id: v.id("businessStories") },
+  args: { id: v.id('businessStories') },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
@@ -35,9 +35,9 @@ export const create = mutation({
     location: v.string(),
     category: v.string(),
     status: v.union(
-      v.literal("Draft"),
-      v.literal("In Review"),
-      v.literal("Published")
+      v.literal('Draft'),
+      v.literal('In Review'),
+      v.literal('Published')
     ),
     duration: v.optional(v.string()),
     rating: v.optional(v.number()),
@@ -71,7 +71,7 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    return await ctx.db.insert("businessStories", {
+    return await ctx.db.insert('businessStories', {
       ...args,
       createdAt: now,
       updatedAt: now,
@@ -81,16 +81,16 @@ export const create = mutation({
 
 export const update = mutation({
   args: {
-    id: v.id("businessStories"),
+    id: v.id('businessStories'),
     title: v.optional(v.string()),
     business: v.optional(v.string()),
     location: v.optional(v.string()),
     category: v.optional(v.string()),
     status: v.optional(
       v.union(
-        v.literal("Draft"),
-        v.literal("In Review"),
-        v.literal("Published")
+        v.literal('Draft'),
+        v.literal('In Review'),
+        v.literal('Published')
       )
     ),
     duration: v.optional(v.string()),
@@ -139,7 +139,7 @@ export const update = mutation({
 });
 
 export const deleteStory = mutation({
-  args: { id: v.id("businessStories") },
+  args: { id: v.id('businessStories') },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
   },
@@ -147,18 +147,18 @@ export const deleteStory = mutation({
 
 export const addMedia = mutation({
   args: {
-    storyId: v.id("businessStories"),
-    type: v.union(v.literal("image"), v.literal("video")),
+    storyId: v.id('businessStories'),
+    type: v.union(v.literal('image'), v.literal('video')),
     storageId: v.string(),
     muxAssetId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const story = await ctx.db.get(args.storyId);
-    if (!story) throw new Error("Story not found");
+    if (!story) throw new Error('Story not found');
 
     const currentMedia = story.media || { images: [], video: undefined };
 
-    if (args.type === "image") {
+    if (args.type === 'image') {
       await ctx.db.patch(args.storyId, {
         media: {
           ...currentMedia,
@@ -166,7 +166,7 @@ export const addMedia = mutation({
         },
         updatedAt: Date.now(),
       });
-    } else if (args.type === "video") {
+    } else if (args.type === 'video') {
       await ctx.db.patch(args.storyId, {
         media: {
           ...currentMedia,
@@ -179,7 +179,7 @@ export const addMedia = mutation({
 });
 
 export const incrementViews = mutation({
-  args: { id: v.id("businessStories") },
+  args: { id: v.id('businessStories') },
   handler: async (ctx, args) => {
     const story = await ctx.db.get(args.id);
     if (!story) return;
@@ -188,84 +188,89 @@ export const incrementViews = mutation({
 });
 
 export const getStory = query({
-  args: { id: v.id("businessStories") },
+  args: { id: v.id('businessStories') },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
   },
 });
 
 export const getByIdWithMedia = query({
-  args: { id: v.id("businessStories") },
+  args: { id: v.id('businessStories') },
   handler: async (ctx, args) => {
-    const story = await ctx.db.get(args.id);
-    if (!story) return null;
+    try {
+      const story = await ctx.db.get(args.id);
+      if (!story) return null;
 
-    const mediaItems = await ctx.db
-      .query("media")
-      .filter((q) => q.eq(q.field("storyId"), args.id))
-      .collect();
+      const mediaItems = await ctx.db
+        .query('media')
+        .filter((q) => q.eq(q.field('storyId'), args.id))
+        .collect();
 
-    const images: any[] = [];
-    const videos: any[] = [];
+      const images: any[] = [];
+      const videos: any[] = [];
 
-    for (const media of mediaItems) {
-      if (media.type === "image") {
-        const url = await ctx.storage.getUrl(media.storageId as any);
-        images.push({
-          _id: media._id,
-          url,
-          filename: media.filename,
-          storageId: media.storageId,
-        });
-      } else if (media.type === "video") {
-        const playbackUrl = media.muxPlaybackId
-          ? `https://stream.mux.com/${media.muxPlaybackId}.m3u8`
-          : null;
+      for (const media of mediaItems) {
+        if (media.type === 'image') {
+          const url = await ctx.storage.getUrl(media.storageId as any);
+          images.push({
+            _id: media._id,
+            url,
+            filename: media.filename,
+            storageId: media.storageId,
+          });
+        } else if (media.type === 'video') {
+          const playbackUrl = media.muxPlaybackId
+            ? `https://stream.mux.com/${media.muxPlaybackId}.m3u8`
+            : null;
 
-        const thumbnailUrl = media.thumbnailUrl
-          ? media.thumbnailUrl
-          : media.muxPlaybackId
-          ? `https://image.mux.com/${media.muxPlaybackId}/thumbnail.png?width=400&height=225`
-          : null;
+          const thumbnailUrl = media.thumbnailUrl
+            ? media.thumbnailUrl
+            : media.muxPlaybackId
+            ? `https://image.mux.com/${media.muxPlaybackId}/thumbnail.png?width=400&height=225`
+            : null;
 
-        videos.push({
-          _id: media._id,
-          filename: media.filename,
-          muxAssetId: media.muxAssetId,
-          muxPlaybackId: media.muxPlaybackId,
-          playbackUrl,
-          thumbnailUrl,
-        });
+          videos.push({
+            _id: media._id,
+            filename: media.filename,
+            muxAssetId: media.muxAssetId,
+            muxPlaybackId: media.muxPlaybackId,
+            playbackUrl,
+            thumbnailUrl,
+          });
+        }
       }
-    }
 
-    return {
-      ...story,
-      media: {
-        images,
-        videos,
-      },
-    };
+      return {
+        ...story,
+        media: {
+          images,
+          videos,
+        },
+      };
+    } catch (error) {
+      console.log('Error getting story with media:', error);
+      return null;
+    }
   },
 });
 
 export const listWithMedia = query({
   args: {},
   handler: async (ctx) => {
-    const stories = await ctx.db.query("businessStories").collect();
+    const stories = await ctx.db.query('businessStories').collect();
 
     const storiesWithMedia = await Promise.all(
       stories.map(async (story) => {
         const mediaItems = await ctx.db
-          .query("media")
-          .filter((q) => q.eq(q.field("storyId"), story._id))
+          .query('media')
+          .filter((q) => q.eq(q.field('storyId'), story._id))
           .collect();
 
         const images: any[] = [];
         const videos: any[] = [];
 
         for (const media of mediaItems) {
-          if (media.type === "image") {
+          if (media.type === 'image') {
             const url = await ctx.storage.getUrl(media.storageId as any);
             images.push({
               _id: media._id,
@@ -273,7 +278,7 @@ export const listWithMedia = query({
               filename: media.filename,
               storageId: media.storageId,
             });
-          } else if (media.type === "video") {
+          } else if (media.type === 'video') {
             videos.push({
               _id: media._id,
               playbackId: media.muxPlaybackId,

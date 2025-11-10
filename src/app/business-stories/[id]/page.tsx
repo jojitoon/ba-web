@@ -12,12 +12,13 @@ import {
   MapPin,
   Calendar,
   Star,
-  QrCode,
   ExternalLink,
+  ArrowLeft,
 } from 'lucide-react';
 import MuxVideoPlayer from '@/components/mux-video-player';
 import FavoriteButton from '@/components/favorite-button';
 import ShareButton from '@/components/share-button';
+import QRCodePlaque from '@/components/qr-code-plaque';
 
 // Helper function to get playbackId from video object
 function getPlaybackId(video: any): string | null {
@@ -51,7 +52,7 @@ export default function BusinessStoryPage() {
     return (
       <div className='min-h-screen bg-background'>
         <Navigation />
-        <div className='pt-20 pb-16 text-center'>
+        <div className='pt-40 pb-16 text-center'>
           <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4'></div>
           <p className='text-foreground/70'>Loading business story...</p>
         </div>
@@ -89,7 +90,7 @@ export default function BusinessStoryPage() {
       <Navigation />
 
       {/* Hero Section */}
-      <section className='pt-20 pb-16 bg-card/30'>
+      <section className='pt-40 pb-16 bg-card/30'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='max-w-4xl'>
             <div className='flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-4'>
@@ -141,12 +142,12 @@ export default function BusinessStoryPage() {
                   url={`/business-stories/${story._id}`}
                   title={story.title}
                   description={story.description}
-                  className="flex-1 sm:flex-none"
+                  className='flex-1 sm:flex-none'
                 />
                 <FavoriteButton
-                  itemType="businessStory"
+                  itemType='businessStory'
                   itemId={story._id}
-                  className="flex-1 sm:flex-none"
+                  className='flex-1 sm:flex-none'
                 />
               </div>
             </div>
@@ -194,82 +195,46 @@ export default function BusinessStoryPage() {
       {/* Story Details */}
       <section className='py-16 bg-card/30'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='grid grid-cols-1 lg:grid-cols-2 gap-12'>
-            <div>
-              <h2 className='text-3xl font-bold text-foreground mb-6'>
-                The Full Story
-              </h2>
-              <p className='text-lg text-foreground/80 leading-relaxed mb-8'>
-                {story.fullDescription || story.description}
-              </p>
+          <div className='max-w-4xl'>
+            <h2 className='text-3xl font-bold text-foreground mb-6'>
+              The Full Story
+            </h2>
+            <p className='text-lg text-foreground/80 leading-relaxed mb-8'>
+              {story.fullDescription || story.description}
+            </p>
 
-              <h3 className='text-2xl font-bold text-foreground mb-6'>
-                Timeline
-              </h3>
-              <div className='space-y-6'>
-                {story.milestones && story.milestones.length > 0 ? (
-                  story.milestones.map((milestone, index) => (
-                    <div key={index} className='flex items-start space-x-4'>
-                      <div className='w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0'>
-                        <Calendar className='w-6 h-6 text-primary' />
-                      </div>
-                      <div>
-                        <div className='flex items-center space-x-2 mb-2'>
-                          <span className='text-sm font-medium text-primary'>
-                            {milestone.year}
-                          </span>
-                          <span className='text-lg font-semibold text-foreground'>
-                            {milestone.title}
-                          </span>
-                        </div>
-                        <p className='text-foreground/70'>
-                          {milestone.description}
-                        </p>
-                      </div>
+            <h3 className='text-2xl font-bold text-foreground mb-6'>
+              Timeline
+            </h3>
+            <div className='space-y-6'>
+              {story.milestones && story.milestones.length > 0 ? (
+                story.milestones.map((milestone, index) => (
+                  <div key={index} className='flex items-start space-x-4'>
+                    <div className='w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0'>
+                      <Calendar className='w-6 h-6 text-primary' />
                     </div>
-                  ))
-                ) : (
-                  <div className='text-center py-8'>
-                    <p className='text-foreground/60 italic'>
-                      No timeline information available
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <h3 className='text-2xl font-bold text-foreground mb-6'>
-                Customer Testimonials
-              </h3>
-              <div className='space-y-6'>
-                {story.testimonials && story.testimonials.length > 0 ? (
-                  story.testimonials.map((testimonial, index) => (
-                    <div
-                      key={index}
-                      className='bg-card rounded-lg p-6 metallic-border'
-                    >
-                      <p className='text-foreground/80 mb-4 leading-relaxed'>
-                        "{testimonial.content}"
+                    <div>
+                      <div className='flex items-center space-x-2 mb-2'>
+                        <span className='text-sm font-medium text-primary'>
+                          {milestone.year}
+                        </span>
+                        <span className='text-lg font-semibold text-foreground'>
+                          {milestone.title}
+                        </span>
+                      </div>
+                      <p className='text-foreground/70'>
+                        {milestone.description}
                       </p>
-                      <div>
-                        <h4 className='font-semibold text-foreground'>
-                          {testimonial.name}
-                        </h4>
-                        <p className='text-sm text-foreground/60'>
-                          {testimonial.role}
-                        </p>
-                      </div>
                     </div>
-                  ))
-                ) : (
-                  <div className='text-center py-8'>
-                    <p className='text-foreground/60 italic'>
-                      No testimonials available
-                    </p>
                   </div>
-                )}
-              </div>
+                ))
+              ) : (
+                <div className='text-center py-8'>
+                  <p className='text-foreground/60 italic'>
+                    No timeline information available
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -298,6 +263,57 @@ export default function BusinessStoryPage() {
             ) : (
               <div className='col-span-full text-center py-16'>
                 <p className='text-foreground/60 italic'>No photos available</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Customer Testimonials */}
+      <section className='py-16 bg-secondary/20'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+          <div className='mb-12'>
+            <div className='flex items-center space-x-4 mb-6'>
+              <div className='h-px w-16 bg-foreground'></div>
+              <span className='text-xs uppercase tracking-[0.2em] font-semibold text-foreground/60'>
+                Testimonials
+              </span>
+            </div>
+            <h2 className='magazine-headline text-4xl sm:text-5xl lg:text-6xl text-foreground mb-6 max-w-3xl'>
+              Customer <span className='italic'>Testimonials</span>
+            </h2>
+          </div>
+
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
+            {story.testimonials && story.testimonials.length > 0 ? (
+              story.testimonials.map((testimonial, index) => (
+                <div key={index} className='editorial-card p-8'>
+                  <div className='flex items-center space-x-1 mb-4'>
+                    {[...Array(testimonial.rating || 5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className='w-4 h-4 text-foreground fill-current'
+                      />
+                    ))}
+                  </div>
+                  <p className='editorial-text text-foreground/80 mb-6 leading-relaxed'>
+                    "{testimonial.content}"
+                  </p>
+                  <div className='border-t border-border pt-4'>
+                    <h4 className='font-serif font-bold text-lg text-foreground mb-1'>
+                      {testimonial.name}
+                    </h4>
+                    <p className='text-sm text-foreground/60 uppercase tracking-wider'>
+                      {testimonial.role}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className='col-span-full text-center py-16'>
+                <p className='text-foreground/60 italic'>
+                  No testimonials available
+                </p>
               </div>
             )}
           </div>
@@ -347,15 +363,11 @@ export default function BusinessStoryPage() {
               </div>
             </div>
 
-            <div className='bg-background rounded-lg p-6 max-w-md mx-auto'>
-              <QrCode className='w-12 h-12 text-primary mx-auto mb-3' />
-              <h3 className='font-semibold text-foreground mb-2'>
-                QR Code Plaque
-              </h3>
-              <p className='text-sm text-foreground/70'>
-                Scan the QR code at {story.business} to watch this documentary
-              </p>
-            </div>
+            <QRCodePlaque
+              url={`/business-stories/${story._id}`}
+              title={story.title}
+              businessName={story.business}
+            />
           </div>
         </div>
       </section>
