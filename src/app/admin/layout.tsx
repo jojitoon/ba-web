@@ -15,6 +15,7 @@ import {
   LogOut,
   Plus,
   BarChart3,
+  Mail,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -48,6 +49,11 @@ const adminNavItems = [
     href: '/admin/analytics',
     label: 'Analytics',
     icon: BarChart3,
+  },
+  {
+    href: '/admin/messages',
+    label: 'Messages',
+    icon: Mail,
   },
   {
     href: '/admin/settings',

@@ -1,5 +1,5 @@
-import { defineSchema, defineTable } from "convex/server";
-import { v } from "convex/values";
+import { defineSchema, defineTable } from 'convex/server';
+import { v } from 'convex/values';
 
 export default defineSchema({
   projects: defineTable({
@@ -7,11 +7,11 @@ export default defineSchema({
     location: v.string(),
     category: v.string(),
     status: v.union(
-      v.literal("Draft"),
-      v.literal("Archived"),
-      v.literal("In Progress"),
-      v.literal("In Review"),
-      v.literal("Published")
+      v.literal('Draft'),
+      v.literal('Archived'),
+      v.literal('In Progress'),
+      v.literal('In Review'),
+      v.literal('Published')
     ),
     budget: v.optional(v.string()),
     timeline: v.optional(v.string()),
@@ -39,9 +39,9 @@ export default defineSchema({
         endDate: v.string(),
         description: v.string(),
         status: v.union(
-          v.literal("completed"),
-          v.literal("in-progress"),
-          v.literal("pending")
+          v.literal('completed'),
+          v.literal('in-progress'),
+          v.literal('pending')
         ),
         images: v.array(v.string()), // Convex storage IDs
       })
@@ -66,11 +66,11 @@ export default defineSchema({
     location: v.string(),
     category: v.string(),
     status: v.union(
-      v.literal("Draft"),
-      v.literal("In Review"),
-      v.literal("Archived"),
-      v.literal("In Progress"),
-      v.literal("Published")
+      v.literal('Draft'),
+      v.literal('In Review'),
+      v.literal('Archived'),
+      v.literal('In Progress'),
+      v.literal('Published')
     ),
     duration: v.optional(v.string()),
     rating: v.optional(v.number()),
@@ -113,7 +113,7 @@ export default defineSchema({
   }),
 
   media: defineTable({
-    type: v.union(v.literal("image"), v.literal("video")),
+    type: v.union(v.literal('image'), v.literal('video')),
     filename: v.string(),
     storageId: v.string(), // Convex storage ID
     muxAssetId: v.optional(v.string()), // For videos
@@ -122,15 +122,15 @@ export default defineSchema({
     thumbnailUrl: v.optional(v.string()),
     size: v.number(),
     mimeType: v.string(),
-    projectId: v.optional(v.id("projects")),
-    storyId: v.optional(v.id("businessStories")),
+    projectId: v.optional(v.id('projects')),
+    storyId: v.optional(v.id('businessStories')),
     uploadedAt: v.number(),
   }),
 
   users: defineTable({
     name: v.string(),
     email: v.string(),
-    role: v.union(v.literal("admin"), v.literal("editor"), v.literal("viewer")),
+    role: v.union(v.literal('admin'), v.literal('editor'), v.literal('viewer')),
     createdAt: v.number(),
     lastLoginAt: v.optional(v.number()),
   }),
@@ -141,30 +141,43 @@ export default defineSchema({
     passwordHash: v.string(), // In production, use proper hashing
     createdAt: v.number(),
     lastLoginAt: v.optional(v.number()),
-  })
-    .index("by_email", ["email"]),
+  }).index('by_email', ['email']),
 
   favorites: defineTable({
     userId: v.string(), // Email or user identifier
-    itemType: v.union(v.literal("project"), v.literal("businessStory")),
+    itemType: v.union(v.literal('project'), v.literal('businessStory')),
     itemId: v.string(), // Store as string to handle both project and businessStory IDs
     createdAt: v.number(),
   })
-    .index("by_user", ["userId"])
-    .index("by_item", ["itemType", "itemId"]),
+    .index('by_user', ['userId'])
+    .index('by_item', ['itemType', 'itemId']),
 
   analyticsEvents: defineTable({
     eventType: v.union(
-      v.literal("view"),
-      v.literal("share_click"),
-      v.literal("link_copy"),
-      v.literal("favorite")
+      v.literal('view'),
+      v.literal('share_click'),
+      v.literal('link_copy'),
+      v.literal('favorite')
     ),
-    itemType: v.union(v.literal("project"), v.literal("businessStory")),
+    itemType: v.union(v.literal('project'), v.literal('businessStory')),
     itemId: v.string(),
     createdAt: v.number(),
   })
-    .index("by_item", ["itemType", "itemId"])
-    .index("by_type", ["eventType"])
-    .index("by_date", ["createdAt"]),
+    .index('by_item', ['itemType', 'itemId'])
+    .index('by_type', ['eventType'])
+    .index('by_date', ['createdAt']),
+
+  messages: defineTable({
+    name: v.string(),
+    email: v.string(),
+    company: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    service: v.string(),
+    projectType: v.optional(v.string()),
+    message: v.string(),
+    read: v.optional(v.boolean()),
+    createdAt: v.number(),
+  })
+    .index('by_read', ['read'])
+    .index('by_date', ['createdAt']),
 });

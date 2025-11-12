@@ -18,6 +18,7 @@ import type * as auth from "../auth.js";
 import type * as businessStories from "../businessStories.js";
 import type * as favorites from "../favorites.js";
 import type * as media from "../media.js";
+import type * as messages from "../messages.js";
 import type * as mux from "../mux.js";
 import type * as projects from "../projects.js";
 import type * as seed from "../seed.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   businessStories: typeof businessStories;
   favorites: typeof favorites;
   media: typeof media;
+  messages: typeof messages;
   mux: typeof mux;
   projects: typeof projects;
   seed: typeof seed;
