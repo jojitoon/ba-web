@@ -274,17 +274,19 @@ export default function ForConstructionPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <PricingCard
               title="Basic Documentation"
-              price="$1,999"
-              period="per project"
-              description="Essential documentation for small to medium projects"
+              price="$399"
+              period="/visit (min $1,197)"
+              description="Small projects"
               features={[
-                "Monthly progress photos",
-                "Basic drone footage",
-                "Project timeline",
-                "Team interviews (2-3 people)",
-                "Online project portal",
-                "Basic 3D model",
+                "Progress photos & video",
+                "Basic drone",
+                "Timeline update",
+                "1 interview",
+                "Portal update",
+                "Basic 3D",
                 "Email support",
+                "+ Free 30-day app → $29.99/mo",
+                "Extra interview: $99",
               ]}
               cta="Get Started"
               ctaLink="/contact?plan=basic-doc"
@@ -293,18 +295,20 @@ export default function ForConstructionPage() {
 
             <PricingCard
               title="Professional Documentation"
-              price="$4,999"
-              period="per project"
-              description="Comprehensive documentation for large commercial projects"
+              price="$599"
+              period="/visit (min $1,797)"
+              description="Large commercial"
               features={[
-                "Weekly progress photos & videos",
-                "Professional drone footage",
-                "Interactive project timeline",
-                "Team interviews (5-8 people)",
-                "Advanced 3D models",
-                "Virtual tour creation",
-                "Client portal & updates",
+                "Weekly photos & videos",
+                "Pro drone",
+                "Interactive timeline",
+                "2 interviews",
+                "Advanced 3D",
+                "Virtual tour update",
+                "Client portal",
                 "Priority support",
+                "+ Free 30-day app → $29.99/mo",
+                "Extra interview: $99",
               ]}
               cta="Get Started"
               ctaLink="/contact?plan=professional-doc"
@@ -314,19 +318,21 @@ export default function ForConstructionPage() {
 
             <PricingCard
               title="Premium Documentation"
-              price="$9,999"
-              period="per project"
-              description="Complete documentation for major infrastructure projects"
+              price="$999"
+              period="/visit (min $2,997)"
+              description="Major infrastructure"
               features={[
-                "Daily progress documentation",
-                "Cinematic drone footage",
-                "Full project documentary",
-                "Comprehensive team interviews",
-                "Advanced 3D modeling & VR",
-                "Multiple virtual tours",
-                "Dedicated project manager",
-                "Custom reporting",
+                "Daily/weekly docs",
+                "Cinematic drone",
+                "Full doc segment",
+                "3 interviews",
+                "3D/VR",
+                "Multiple tours",
+                "Dedicated manager",
+                "Custom reports",
                 "24/7 support",
+                "+ Free 30-day app → $29.99/mo",
+                "Extra interview: $99",
               ]}
               cta="Get Started"
               ctaLink="/contact?plan=premium-doc"

@@ -180,17 +180,18 @@ export default function ForBusinessesPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <PricingCard
               title="Basic"
-              price="$2,499"
+              price="$1,200"
               period="one-time"
               description="Perfect for small businesses looking to tell their story"
               features={[
-                "30-minute documentary",
+                "5-7 minute documentary",
                 "Professional videography",
                 "Owner interview",
                 "Basic editing",
                 "1 QR/NFC plaque",
                 "Online hosting",
                 "Email support",
+                "+ Free 30-day app trial → $29.99/mo",
               ]}
               cta="Get Started"
               ctaLink="/contact?plan=basic"
@@ -199,11 +200,11 @@ export default function ForBusinessesPage() {
 
             <PricingCard
               title="Premium"
-              price="$4,999"
+              price="$2,400"
               period="one-time"
               description="Comprehensive storytelling for established businesses"
               features={[
-                "45-minute documentary",
+                "8-12 minute documentary",
                 "Professional videography & photography",
                 "Owner & team interviews",
                 "Advanced editing & graphics",
@@ -211,6 +212,7 @@ export default function ForBusinessesPage() {
                 "Online hosting & analytics",
                 "Priority support",
                 "Social media clips",
+                "+ Free 30-day app trial → $29.99/mo",
               ]}
               cta="Get Started"
               ctaLink="/contact?plan=premium"
@@ -220,11 +222,11 @@ export default function ForBusinessesPage() {
 
             <PricingCard
               title="Legacy"
-              price="$9,999"
+              price="$4,800"
               period="one-time"
               description="Complete legacy preservation for multi-generational businesses"
               features={[
-                "60-minute documentary",
+                "15-20 minute documentary",
                 "Cinematic production quality",
                 "Multiple interviews & testimonials",
                 "Professional editing & motion graphics",
@@ -233,6 +235,7 @@ export default function ForBusinessesPage() {
                 "Dedicated project manager",
                 "Social media package",
                 "Print materials",
+                "+ Free 30-day app trial → $29.99/mo",
               ]}
               cta="Get Started"
               ctaLink="/contact?plan=legacy"
