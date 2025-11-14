@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
@@ -43,10 +43,26 @@ export default function MediaUpload({
 }: MediaUploadProps) {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const generateUploadUrl = useMutation(api.media.generateUploadUrl);
   const saveStorageId = useMutation(api.media.saveStorageId);
   const createMuxUpload = useAction(api.mux.createMuxUpload);
+
+  // Clear successfully uploaded files after 2 seconds
+  useEffect(() => {
+    const successFiles = files.filter((f) => f.status === "success");
+    if (successFiles.length > 0) {
+      const timer = setTimeout(() => {
+        setFiles((prev) => {
+          // Only clear files that are still in success status
+          const remaining = prev.filter((f) => f.status !== "success");
+          return remaining;
+        });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [files]);
 
   const uploadFile = useCallback(
     async (file: File, index: number) => {
@@ -149,7 +165,9 @@ export default function MediaUpload({
 
   const handleFiles = useCallback(
     async (newFiles: FileList | File[]) => {
-      const fileArray = Array.from(newFiles).slice(0, maxFiles - files.length);
+      const fileArray = maxFiles 
+        ? Array.from(newFiles).slice(0, maxFiles - files.filter(f => f.status !== "success").length)
+        : Array.from(newFiles);
 
       const validFiles = fileArray.filter((file) => {
         const isValidType =
@@ -158,8 +176,15 @@ export default function MediaUpload({
         return isValidType && isValidSize;
       });
 
-      if (validFiles.length === 0) return;
+      if (validFiles.length === 0) {
+        // Reset file input even if no valid files
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        return;
+      }
 
+      const currentFilesCount = files.filter(f => f.status !== "success").length;
       const newUploadedFiles: UploadedFile[] = validFiles.map((file) => ({
         id: Math.random().toString(36).substr(2, 9),
         file,
@@ -170,9 +195,14 @@ export default function MediaUpload({
 
       setFiles((prev) => [...prev, ...newUploadedFiles]);
 
+      // Reset file input to allow selecting the same files again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
       try {
         const results = await Promise.all(
-          newUploadedFiles.map((f, i) => uploadFile(f.file, files.length + i))
+          newUploadedFiles.map((f, i) => uploadFile(f.file, currentFilesCount + i))
         );
 
         const mediaIds = results
@@ -184,7 +214,7 @@ export default function MediaUpload({
         console.error("Upload failed:", error);
       }
     },
-    [files.length, maxFiles, uploadFile, onUploadComplete]
+    [files, maxFiles, uploadFile, onUploadComplete]
   );
 
   const handleDrop = useCallback(
@@ -248,6 +278,7 @@ export default function MediaUpload({
           Drag and drop files here, or click to select files
         </p>
         <input
+          ref={fileInputRef}
           type="file"
           multiple
           accept={accept}

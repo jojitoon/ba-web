@@ -637,7 +637,6 @@ export default function NewBusinessStory() {
                 setUploadedMediaIds((prev) => [...prev, ...imageIds]);
               }}
               accept="image/*"
-              maxFiles={5}
             />
           </div>
 
