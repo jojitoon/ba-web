@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
+import Image from 'next/image';
 import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
 import Link from 'next/link';
@@ -51,10 +52,14 @@ export default function BusinessStoryPage() {
   const storyId = params.id as string;
   const videoSectionRef = useRef<HTMLElement>(null);
   const videoPlayerRef = useRef<any>(null);
-  const [imagesPerCategory, setImagesPerCategory] = useState<Record<string, number>>({});
-  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [imagesPerCategory, setImagesPerCategory] = useState<
+    Record<string, number>
+  >({});
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
+    null
+  );
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const INITIAL_IMAGES_PER_CATEGORY = 12; // Show 12 images per category initially
+  const INITIAL_IMAGES_PER_CATEGORY = 8; // Reduced from 12 to 8 for better initial load performance
 
   const story = useQuery(api.businessStories.getByIdWithMedia, {
     id: storyId as any,
@@ -85,8 +90,8 @@ export default function BusinessStoryPage() {
     );
 
     // Sort date categories in descending order (newest first)
-    const sortedCategories = Object.keys(groupedImages).sort(
-      (a, b) => b.localeCompare(a)
+    const sortedCategories = Object.keys(groupedImages).sort((a, b) =>
+      b.localeCompare(a)
     );
 
     // Format date category for display
@@ -107,16 +112,20 @@ export default function BusinessStoryPage() {
     };
   }, [story?.media?.images]);
 
-  // Initialize images per category count
+  // Initialize images per category count (only once when data loads)
   useEffect(() => {
-    if (groupedAndPaginatedImages) {
+    if (
+      groupedAndPaginatedImages &&
+      Object.keys(imagesPerCategory).length === 0
+    ) {
       const initialCounts: Record<string, number> = {};
       groupedAndPaginatedImages.sortedCategories.forEach((category) => {
         initialCounts[category] = INITIAL_IMAGES_PER_CATEGORY;
       });
       setImagesPerCategory(initialCounts);
     }
-  }, [groupedAndPaginatedImages]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupedAndPaginatedImages?.sortedCategories.join(',')]); // Only depend on categories string, not whole object
 
   const loadMoreImages = (dateCategory: string) => {
     setImagesPerCategory((prev) => ({
@@ -135,26 +144,33 @@ export default function BusinessStoryPage() {
     setSelectedCategory(null);
   }, []);
 
-  const navigateImage = useCallback((direction: 'prev' | 'next') => {
-    if (selectedCategory === null || selectedImageIndex === null || !groupedAndPaginatedImages) {
-      return;
-    }
+  const navigateImage = useCallback(
+    (direction: 'prev' | 'next') => {
+      if (
+        selectedCategory === null ||
+        selectedImageIndex === null ||
+        !groupedAndPaginatedImages
+      ) {
+        return;
+      }
 
-    const images = groupedAndPaginatedImages.groupedImages[selectedCategory];
-    if (!images) return;
+      const images = groupedAndPaginatedImages.groupedImages[selectedCategory];
+      if (!images) return;
 
-    if (direction === 'prev') {
-      setSelectedImageIndex((prev) => {
-        if (prev === null) return null;
-        return prev > 0 ? prev - 1 : images.length - 1;
-      });
-    } else {
-      setSelectedImageIndex((prev) => {
-        if (prev === null) return null;
-        return prev < images.length - 1 ? prev + 1 : 0;
-      });
-    }
-  }, [selectedCategory, selectedImageIndex, groupedAndPaginatedImages]);
+      if (direction === 'prev') {
+        setSelectedImageIndex((prev) => {
+          if (prev === null) return null;
+          return prev > 0 ? prev - 1 : images.length - 1;
+        });
+      } else {
+        setSelectedImageIndex((prev) => {
+          if (prev === null) return null;
+          return prev < images.length - 1 ? prev + 1 : 0;
+        });
+      }
+    },
+    [selectedCategory, selectedImageIndex, groupedAndPaginatedImages]
+  );
 
   // Keyboard navigation and body scroll lock for gallery
   useEffect(() => {
@@ -183,9 +199,12 @@ export default function BusinessStoryPage() {
     };
   }, [selectedImageIndex, navigateImage, closeImageGallery]);
 
-  // Track page view
+  // Track page view (defer to avoid blocking initial render)
   useEffect(() => {
-    if (story && storyId) {
+    if (!story || !storyId) return;
+
+    // Use setTimeout to defer non-critical tracking
+    const timeoutId = setTimeout(() => {
       if (shouldCountView('businessStory', storyId)) {
         incrementViews({ id: storyId as any }).catch((error) => {
           console.error('Failed to increment views:', error);
@@ -200,8 +219,10 @@ export default function BusinessStoryPage() {
           console.error('Failed to track view event:', error);
         });
       }
-    }
-  }, [story, storyId, incrementViews, trackEvent]);
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [story?._id, storyId, incrementViews, trackEvent]);
 
   const handleWatchDocumentary = async () => {
     if (videoSectionRef.current) {
@@ -436,57 +457,77 @@ export default function BusinessStoryPage() {
           </h2>
           {groupedAndPaginatedImages ? (
             <div className='space-y-12'>
-              {groupedAndPaginatedImages.sortedCategories.map((dateCategory) => {
-                const images = groupedAndPaginatedImages.groupedImages[dateCategory];
-                const displayedCount = imagesPerCategory[dateCategory] || INITIAL_IMAGES_PER_CATEGORY;
-                const displayedImages = images.slice(0, displayedCount);
-                const hasMore = images.length > displayedCount;
+              {groupedAndPaginatedImages.sortedCategories.map(
+                (dateCategory) => {
+                  const images =
+                    groupedAndPaginatedImages.groupedImages[dateCategory];
+                  const displayedCount =
+                    imagesPerCategory[dateCategory] ||
+                    INITIAL_IMAGES_PER_CATEGORY;
+                  const displayedImages = images.slice(0, displayedCount);
+                  const hasMore = images.length > displayedCount;
 
-                return (
-                  <div key={dateCategory}>
-                    <h3 className='text-2xl font-bold text-foreground mb-6'>
-                      {groupedAndPaginatedImages.formatDateCategory(dateCategory)}
-                      <span className='text-lg font-normal text-foreground/60 ml-2'>
-                        ({images.length})
-                      </span>
-                    </h3>
-                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
-                      {displayedImages.map((image: any, index: number) => {
-                        // Find the index in the full category array
-                        const fullCategoryImages = groupedAndPaginatedImages.groupedImages[dateCategory];
-                        const fullIndex = fullCategoryImages.findIndex((img: any) => img._id === image._id);
-                        const imageIndex = fullIndex >= 0 ? fullIndex : index;
+                  return (
+                    <div key={dateCategory}>
+                      <h3 className='text-2xl font-bold text-foreground mb-6'>
+                        {groupedAndPaginatedImages.formatDateCategory(
+                          dateCategory
+                        )}
+                        <span className='text-lg font-normal text-foreground/60 ml-2'>
+                          ({images.length})
+                        </span>
+                      </h3>
+                      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+                        {displayedImages.map((image: any, index: number) => {
+                          // Find the index in the full category array
+                          const fullCategoryImages =
+                            groupedAndPaginatedImages.groupedImages[
+                              dateCategory
+                            ];
+                          const fullIndex = fullCategoryImages.findIndex(
+                            (img: any) => img._id === image._id
+                          );
+                          const imageIndex = fullIndex >= 0 ? fullIndex : index;
 
-                        return (
-                          <div
-                            key={image._id || index}
-                            className='bg-card rounded-lg overflow-hidden metallic-border cursor-pointer'
-                            onClick={() => openImageGallery(dateCategory, imageIndex)}
-                          >
-                            <img
-                              src={image.url}
-                              alt={image.filename || `Photo ${index + 1}`}
-                              className='w-full h-48 object-cover transition-transform duration-300 hover:scale-105'
-                              loading='lazy'
-                              decoding='async'
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {images.length > displayedCount && (
-                      <div className='text-center mt-6'>
-                        <button
-                          onClick={() => openImageGallery(dateCategory, 0)}
-                          className='bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors'
-                        >
-                          View All ({images.length} images)
-                        </button>
+                          return (
+                            <div
+                              key={image._id || index}
+                              className='bg-card rounded-lg overflow-hidden metallic-border cursor-pointer relative aspect-[4/3]'
+                              onClick={() =>
+                                openImageGallery(dateCategory, imageIndex)
+                              }
+                            >
+                              <Image
+                                src={image.url}
+                                alt={image.filename || `Photo ${index + 1}`}
+                                fill
+                                sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw'
+                                className='object-cover transition-transform duration-300 hover:scale-105'
+                                loading='lazy'
+                                quality={85}
+                                unoptimized={
+                                  image.url.startsWith('http') ||
+                                  image.url.includes('cloudfront')
+                                }
+                              />
+                            </div>
+                          );
+                        })}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+                      {images.length > displayedCount && (
+                        <div className='text-center mt-6'>
+                          <button
+                            onClick={() => openImageGallery(dateCategory, 0)}
+                            className='bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors'
+                          >
+                            View All ({images.length} images)
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+              )}
             </div>
           ) : (
             <div className='text-center py-16'>
@@ -497,83 +538,117 @@ export default function BusinessStoryPage() {
       </section>
 
       {/* Image Gallery Modal */}
-      {selectedImageIndex !== null && selectedCategory && groupedAndPaginatedImages && (
-        <div
-          className='fixed inset-0 z-[100] bg-foreground/95 flex items-center justify-center'
-          onClick={closeImageGallery}
-        >
+      {selectedImageIndex !== null &&
+        selectedCategory &&
+        groupedAndPaginatedImages && (
           <div
-            className='relative w-full h-full flex items-center justify-center p-4'
-            onClick={(e) => e.stopPropagation()}
+            className='fixed inset-0 z-[100] bg-foreground/95 flex items-center justify-center'
+            onClick={closeImageGallery}
           >
-            {/* Close Button */}
-            <button
-              onClick={closeImageGallery}
-              className='absolute top-4 right-4 z-10 bg-background/80 hover:bg-background text-foreground p-3 rounded-full transition-colors'
-              aria-label='Close gallery'
+            <div
+              className='relative w-full h-full flex items-center justify-center p-4'
+              onClick={(e) => e.stopPropagation()}
             >
-              <X className='w-6 h-6' />
-            </button>
+              {/* Close Button */}
+              <button
+                onClick={closeImageGallery}
+                className='absolute top-4 right-4 z-10 bg-background/80 hover:bg-background text-foreground p-3 rounded-full transition-colors'
+                aria-label='Close gallery'
+              >
+                <X className='w-6 h-6' />
+              </button>
 
-            {/* Navigation Buttons */}
-            {groupedAndPaginatedImages.groupedImages[selectedCategory].length > 1 && (
-              <>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigateImage('prev');
-                  }}
-                  className='absolute left-4 z-10 bg-background/80 hover:bg-background text-foreground p-3 rounded-full transition-colors'
-                  aria-label='Previous image'
-                >
-                  <ChevronLeft className='w-8 h-8' />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigateImage('next');
-                  }}
-                  className='absolute right-4 z-10 bg-background/80 hover:bg-background text-foreground p-3 rounded-full transition-colors'
-                  aria-label='Next image'
-                >
-                  <ChevronRight className='w-8 h-8' />
-                </button>
-              </>
-            )}
+              {/* Navigation Buttons */}
+              {groupedAndPaginatedImages.groupedImages[selectedCategory]
+                .length > 1 && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigateImage('prev');
+                    }}
+                    className='absolute left-4 z-10 bg-background/80 hover:bg-background text-foreground p-3 rounded-full transition-colors'
+                    aria-label='Previous image'
+                  >
+                    <ChevronLeft className='w-8 h-8' />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigateImage('next');
+                    }}
+                    className='absolute right-4 z-10 bg-background/80 hover:bg-background text-foreground p-3 rounded-full transition-colors'
+                    aria-label='Next image'
+                  >
+                    <ChevronRight className='w-8 h-8' />
+                  </button>
+                </>
+              )}
 
-            {/* Image Counter */}
-            <div className='absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-background/80 text-foreground px-4 py-2 rounded-full text-sm'>
-              {selectedImageIndex + 1} / {groupedAndPaginatedImages.groupedImages[selectedCategory].length}
+              {/* Image Counter */}
+              <div className='absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-background/80 text-foreground px-4 py-2 rounded-full text-sm'>
+                {selectedImageIndex + 1} /{' '}
+                {
+                  groupedAndPaginatedImages.groupedImages[selectedCategory]
+                    .length
+                }
+              </div>
+
+              {/* Main Image */}
+              {groupedAndPaginatedImages.groupedImages[selectedCategory][
+                selectedImageIndex
+              ] && (
+                <div className='max-w-7xl w-full h-full flex items-center justify-center relative'>
+                  <Image
+                    src={
+                      groupedAndPaginatedImages.groupedImages[selectedCategory][
+                        selectedImageIndex
+                      ].url
+                    }
+                    alt={
+                      groupedAndPaginatedImages.groupedImages[selectedCategory][
+                        selectedImageIndex
+                      ].filename || `Photo ${selectedImageIndex + 1}`
+                    }
+                    fill
+                    sizes='100vw'
+                    className='object-contain'
+                    quality={90}
+                    priority={selectedImageIndex === 0}
+                    unoptimized={
+                      groupedAndPaginatedImages.groupedImages[selectedCategory][
+                        selectedImageIndex
+                      ].url.startsWith('http') ||
+                      groupedAndPaginatedImages.groupedImages[selectedCategory][
+                        selectedImageIndex
+                      ].url.includes('cloudfront')
+                    }
+                  />
+                </div>
+              )}
+
+              {/* Image Info */}
+              {groupedAndPaginatedImages.groupedImages[selectedCategory][
+                selectedImageIndex
+              ] && (
+                <div className='absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 bg-background/80 text-foreground px-4 py-2 rounded-lg text-sm max-w-2xl text-center'>
+                  <p className='font-medium'>
+                    {
+                      groupedAndPaginatedImages.groupedImages[selectedCategory][
+                        selectedImageIndex
+                      ].filename
+                    }
+                  </p>
+                  <p className='text-xs text-foreground/70 mt-1'>
+                    {groupedAndPaginatedImages.formatDateCategory(
+                      selectedCategory
+                    )}
+                  </p>
+                </div>
+              )}
             </div>
-
-            {/* Main Image */}
-            {groupedAndPaginatedImages.groupedImages[selectedCategory][selectedImageIndex] && (
-              <div className='max-w-7xl w-full h-full flex items-center justify-center'>
-                <img
-                  src={groupedAndPaginatedImages.groupedImages[selectedCategory][selectedImageIndex].url}
-                  alt={
-                    groupedAndPaginatedImages.groupedImages[selectedCategory][selectedImageIndex].filename ||
-                    `Photo ${selectedImageIndex + 1}`
-                  }
-                  className='max-w-full max-h-full object-contain'
-                />
-              </div>
-            )}
-
-            {/* Image Info */}
-            {groupedAndPaginatedImages.groupedImages[selectedCategory][selectedImageIndex] && (
-              <div className='absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 bg-background/80 text-foreground px-4 py-2 rounded-lg text-sm max-w-2xl text-center'>
-                <p className='font-medium'>
-                  {groupedAndPaginatedImages.groupedImages[selectedCategory][selectedImageIndex].filename}
-                </p>
-                <p className='text-xs text-foreground/70 mt-1'>
-                  {groupedAndPaginatedImages.formatDateCategory(selectedCategory)}
-                </p>
-              </div>
-            )}
           </div>
-        </div>
-      )}
+        )}
 
       {/* Customer Testimonials */}
       <section className='py-16 bg-secondary/20'>
