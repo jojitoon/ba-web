@@ -28,6 +28,11 @@ export const metadata: Metadata = {
   keywords:
     'construction documentation, business stories, 3D models, virtual tours, project timeline, legacy preservation',
   authors: [{ name: 'Built Ancestry' }],
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
   openGraph: {
     title: 'Built Ancestry - Preserving Legacies in Construction & Business',
     description:

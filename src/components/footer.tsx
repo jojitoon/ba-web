@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import {
-  Building2,
   Mail,
   Phone,
   MapPin,
@@ -21,8 +21,14 @@ export default function Footer() {
             {/* Company Info */}
             <div className='lg:col-span-1'>
               <div className='flex items-center space-x-3 mb-6'>
-                <div className='w-10 h-10 bg-foreground rounded-sm flex items-center justify-center'>
-                  <Building2 className='w-6 h-6 text-background' />
+                <div className='w-10 h-10 relative'>
+                  <Image
+                    src='/logo.png'
+                    alt='Built Ancestry Logo'
+                    fill
+                    className='object-contain'
+                    unoptimized
+                  />
                 </div>
                 <div className='flex flex-col'>
                   <span className='text-lg font-serif font-bold text-foreground tracking-tight leading-none'>

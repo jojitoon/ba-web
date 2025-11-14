@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, Lock, Eye, EyeOff } from 'lucide-react';
+import Image from 'next/image';
+import { Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
 export default function AdminLogin() {
@@ -36,8 +37,14 @@ export default function AdminLogin() {
       <div className='w-full max-w-md'>
         {/* Logo */}
         <div className='text-center mb-8'>
-          <div className='w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4'>
-            <Building2 className='w-8 h-8 text-primary-foreground' />
+          <div className='w-16 h-16 relative mx-auto mb-4'>
+            <Image
+              src='/logo.png'
+              alt='Built Ancestry Logo'
+              fill
+              className='object-contain'
+              unoptimized
+            />
           </div>
           <h1 className='text-2xl font-bold text-foreground'>Built Ancestry</h1>
           <p className='text-foreground/60 mt-1'>Admin Portal</p>

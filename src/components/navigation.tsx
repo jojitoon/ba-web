@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import {
   Menu,
@@ -62,8 +63,14 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 bg-foreground rounded-sm flex items-center justify-center transition-transform group-hover:scale-105">
-              <Building2 className="w-6 h-6 text-background" />
+            <div className="w-10 h-10 relative transition-transform group-hover:scale-105">
+              <Image
+                src="/logo.png"
+                alt="Built Ancestry Logo"
+                fill
+                className="object-contain"
+                unoptimized
+              />
             </div>
             <div className="flex flex-col">
               <span className="text-lg font-serif font-bold text-foreground tracking-tight leading-none">

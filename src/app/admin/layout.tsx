@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   Building2,
   Video,
-  Image,
+  Image as ImageIcon,
   Users,
   Settings,
   Menu,
@@ -38,7 +39,7 @@ const adminNavItems = [
   {
     href: '/admin/media',
     label: 'Media Library',
-    icon: Image,
+    icon: ImageIcon,
   },
   {
     href: '/admin/users',
@@ -91,8 +92,14 @@ export default function AdminLayout({
           {/* Logo */}
           <div className='flex items-center justify-between p-6 border-b border-border'>
             <Link href='/admin' className='flex items-center space-x-2'>
-              <div className='w-8 h-8 bg-primary rounded-lg flex items-center justify-center'>
-                <Building2 className='w-5 h-5 text-primary-foreground' />
+              <div className='w-8 h-8 relative'>
+                <Image
+                  src='/logo.png'
+                  alt='Built Ancestry Logo'
+                  fill
+                  className='object-contain'
+                  unoptimized
+                />
               </div>
               <span className='text-xl font-bold text-foreground'>
                 Built Ancestry
