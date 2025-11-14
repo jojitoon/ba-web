@@ -1,5 +1,6 @@
 import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
+import { getS3PublicUrl } from './s3';
 
 export const list = query({
   args: {
@@ -211,12 +212,14 @@ export const getByIdWithMedia = query({
 
       for (const media of mediaItems) {
         if (media.type === 'image') {
-          const url = await ctx.storage.getUrl(media.storageId as any);
+          // Use stored publicUrl if available, otherwise generate it
+          const url = media.publicUrl || getS3PublicUrl(media.storageId);
           images.push({
             _id: media._id,
             url,
             filename: media.filename,
             storageId: media.storageId,
+            dateCategory: media.dateCategory,
           });
         } else if (media.type === 'video') {
           const playbackUrl = media.muxPlaybackId
@@ -271,7 +274,7 @@ export const listWithMedia = query({
 
         for (const media of mediaItems) {
           if (media.type === 'image') {
-            const url = await ctx.storage.getUrl(media.storageId as any);
+            const url = getS3PublicUrl(media.storageId);
             images.push({
               _id: media._id,
               url,
@@ -306,6 +309,17 @@ export const listWithMedia = query({
 export const getMediaUrl = query({
   args: { storageId: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.storage.getUrl(args.storageId as any);
+    // First try to find media record and use stored publicUrl
+    const media = await ctx.db
+      .query('media')
+      .filter((q) => q.eq(q.field('storageId'), args.storageId))
+      .first();
+
+    if (media && media.publicUrl) {
+      return media.publicUrl;
+    }
+
+    // If no stored URL, generate one
+    return getS3PublicUrl(args.storageId);
   },
 });

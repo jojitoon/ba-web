@@ -21,6 +21,7 @@ import type * as media from "../media.js";
 import type * as messages from "../messages.js";
 import type * as mux from "../mux.js";
 import type * as projects from "../projects.js";
+import type * as s3 from "../s3.js";
 import type * as seed from "../seed.js";
 
 /**
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   mux: typeof mux;
   projects: typeof projects;
+  s3: typeof s3;
   seed: typeof seed;
 }>;
 export declare const api: FilterApi<

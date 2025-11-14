@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
 import Link from 'next/link';
@@ -16,6 +16,9 @@ import {
   ExternalLink,
   ArrowLeft,
   Eye,
+  X,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import MuxVideoPlayer from '@/components/mux-video-player';
 import FavoriteButton from '@/components/favorite-button';
@@ -48,6 +51,10 @@ export default function BusinessStoryPage() {
   const storyId = params.id as string;
   const videoSectionRef = useRef<HTMLElement>(null);
   const videoPlayerRef = useRef<any>(null);
+  const [imagesPerCategory, setImagesPerCategory] = useState<Record<string, number>>({});
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const INITIAL_IMAGES_PER_CATEGORY = 12; // Show 12 images per category initially
 
   const story = useQuery(api.businessStories.getByIdWithMedia, {
     id: storyId as any,
@@ -57,6 +64,124 @@ export default function BusinessStoryPage() {
   const trackEvent = useMutation(api.analytics.trackEvent);
 
   const hasVideos = story?.media?.videos && story.media.videos.length > 0;
+
+  // Group and paginate images
+  const groupedAndPaginatedImages = useMemo(() => {
+    if (!story?.media?.images || story.media.images.length === 0) {
+      return null;
+    }
+
+    // Group images by dateCategory
+    const groupedImages = story.media.images.reduce(
+      (acc: Record<string, typeof story.media.images>, image: any) => {
+        const dateCategory = image.dateCategory || 'Unknown';
+        if (!acc[dateCategory]) {
+          acc[dateCategory] = [];
+        }
+        acc[dateCategory].push(image);
+        return acc;
+      },
+      {}
+    );
+
+    // Sort date categories in descending order (newest first)
+    const sortedCategories = Object.keys(groupedImages).sort(
+      (a, b) => b.localeCompare(a)
+    );
+
+    // Format date category for display
+    const formatDateCategory = (dateCategory: string) => {
+      if (dateCategory === 'Unknown') return 'Unknown Date';
+      const [year, month] = dateCategory.split('-');
+      const date = new Date(parseInt(year), parseInt(month) - 1);
+      return date.toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      });
+    };
+
+    return {
+      sortedCategories,
+      groupedImages,
+      formatDateCategory,
+    };
+  }, [story?.media?.images]);
+
+  // Initialize images per category count
+  useEffect(() => {
+    if (groupedAndPaginatedImages) {
+      const initialCounts: Record<string, number> = {};
+      groupedAndPaginatedImages.sortedCategories.forEach((category) => {
+        initialCounts[category] = INITIAL_IMAGES_PER_CATEGORY;
+      });
+      setImagesPerCategory(initialCounts);
+    }
+  }, [groupedAndPaginatedImages]);
+
+  const loadMoreImages = (dateCategory: string) => {
+    setImagesPerCategory((prev) => ({
+      ...prev,
+      [dateCategory]: (prev[dateCategory] || INITIAL_IMAGES_PER_CATEGORY) + 12,
+    }));
+  };
+
+  const openImageGallery = (dateCategory: string, imageIndex: number) => {
+    setSelectedCategory(dateCategory);
+    setSelectedImageIndex(imageIndex);
+  };
+
+  const closeImageGallery = useCallback(() => {
+    setSelectedImageIndex(null);
+    setSelectedCategory(null);
+  }, []);
+
+  const navigateImage = useCallback((direction: 'prev' | 'next') => {
+    if (selectedCategory === null || selectedImageIndex === null || !groupedAndPaginatedImages) {
+      return;
+    }
+
+    const images = groupedAndPaginatedImages.groupedImages[selectedCategory];
+    if (!images) return;
+
+    if (direction === 'prev') {
+      setSelectedImageIndex((prev) => {
+        if (prev === null) return null;
+        return prev > 0 ? prev - 1 : images.length - 1;
+      });
+    } else {
+      setSelectedImageIndex((prev) => {
+        if (prev === null) return null;
+        return prev < images.length - 1 ? prev + 1 : 0;
+      });
+    }
+  }, [selectedCategory, selectedImageIndex, groupedAndPaginatedImages]);
+
+  // Keyboard navigation and body scroll lock for gallery
+  useEffect(() => {
+    if (selectedImageIndex === null) {
+      document.body.style.overflow = '';
+      return;
+    }
+
+    // Prevent body scrolling when gallery is open
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeImageGallery();
+      } else if (e.key === 'ArrowLeft') {
+        navigateImage('prev');
+      } else if (e.key === 'ArrowRight') {
+        navigateImage('next');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [selectedImageIndex, navigateImage, closeImageGallery]);
 
   // Track page view
   useEffect(() => {
@@ -309,28 +434,146 @@ export default function BusinessStoryPage() {
           <h2 className='text-3xl font-bold text-foreground mb-8 text-center'>
             Photo Gallery
           </h2>
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
-            {story.media.images && story.media.images.length > 0 ? (
-              story.media.images.map((image, index) => (
-                <div
-                  key={index}
-                  className='bg-card rounded-lg overflow-hidden metallic-border'
+          {groupedAndPaginatedImages ? (
+            <div className='space-y-12'>
+              {groupedAndPaginatedImages.sortedCategories.map((dateCategory) => {
+                const images = groupedAndPaginatedImages.groupedImages[dateCategory];
+                const displayedCount = imagesPerCategory[dateCategory] || INITIAL_IMAGES_PER_CATEGORY;
+                const displayedImages = images.slice(0, displayedCount);
+                const hasMore = images.length > displayedCount;
+
+                return (
+                  <div key={dateCategory}>
+                    <h3 className='text-2xl font-bold text-foreground mb-6'>
+                      {groupedAndPaginatedImages.formatDateCategory(dateCategory)}
+                      <span className='text-lg font-normal text-foreground/60 ml-2'>
+                        ({images.length})
+                      </span>
+                    </h3>
+                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+                      {displayedImages.map((image: any, index: number) => {
+                        // Find the index in the full category array
+                        const fullCategoryImages = groupedAndPaginatedImages.groupedImages[dateCategory];
+                        const fullIndex = fullCategoryImages.findIndex((img: any) => img._id === image._id);
+                        const imageIndex = fullIndex >= 0 ? fullIndex : index;
+
+                        return (
+                          <div
+                            key={image._id || index}
+                            className='bg-card rounded-lg overflow-hidden metallic-border cursor-pointer'
+                            onClick={() => openImageGallery(dateCategory, imageIndex)}
+                          >
+                            <img
+                              src={image.url}
+                              alt={image.filename || `Photo ${index + 1}`}
+                              className='w-full h-48 object-cover transition-transform duration-300 hover:scale-105'
+                              loading='lazy'
+                              decoding='async'
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {images.length > displayedCount && (
+                      <div className='text-center mt-6'>
+                        <button
+                          onClick={() => openImageGallery(dateCategory, 0)}
+                          className='bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors'
+                        >
+                          View All ({images.length} images)
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className='text-center py-16'>
+              <p className='text-foreground/60 italic'>No photos available</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Image Gallery Modal */}
+      {selectedImageIndex !== null && selectedCategory && groupedAndPaginatedImages && (
+        <div
+          className='fixed inset-0 z-[100] bg-foreground/95 flex items-center justify-center'
+          onClick={closeImageGallery}
+        >
+          <div
+            className='relative w-full h-full flex items-center justify-center p-4'
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={closeImageGallery}
+              className='absolute top-4 right-4 z-10 bg-background/80 hover:bg-background text-foreground p-3 rounded-full transition-colors'
+              aria-label='Close gallery'
+            >
+              <X className='w-6 h-6' />
+            </button>
+
+            {/* Navigation Buttons */}
+            {groupedAndPaginatedImages.groupedImages[selectedCategory].length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateImage('prev');
+                  }}
+                  className='absolute left-4 z-10 bg-background/80 hover:bg-background text-foreground p-3 rounded-full transition-colors'
+                  aria-label='Previous image'
                 >
-                  <img
-                    src={image.url}
-                    alt={image.filename || `Photo ${index + 1}`}
-                    className='w-full h-48 object-cover transition-transform duration-300 hover:scale-105'
-                  />
-                </div>
-              ))
-            ) : (
-              <div className='col-span-full text-center py-16'>
-                <p className='text-foreground/60 italic'>No photos available</p>
+                  <ChevronLeft className='w-8 h-8' />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateImage('next');
+                  }}
+                  className='absolute right-4 z-10 bg-background/80 hover:bg-background text-foreground p-3 rounded-full transition-colors'
+                  aria-label='Next image'
+                >
+                  <ChevronRight className='w-8 h-8' />
+                </button>
+              </>
+            )}
+
+            {/* Image Counter */}
+            <div className='absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-background/80 text-foreground px-4 py-2 rounded-full text-sm'>
+              {selectedImageIndex + 1} / {groupedAndPaginatedImages.groupedImages[selectedCategory].length}
+            </div>
+
+            {/* Main Image */}
+            {groupedAndPaginatedImages.groupedImages[selectedCategory][selectedImageIndex] && (
+              <div className='max-w-7xl w-full h-full flex items-center justify-center'>
+                <img
+                  src={groupedAndPaginatedImages.groupedImages[selectedCategory][selectedImageIndex].url}
+                  alt={
+                    groupedAndPaginatedImages.groupedImages[selectedCategory][selectedImageIndex].filename ||
+                    `Photo ${selectedImageIndex + 1}`
+                  }
+                  className='max-w-full max-h-full object-contain'
+                />
+              </div>
+            )}
+
+            {/* Image Info */}
+            {groupedAndPaginatedImages.groupedImages[selectedCategory][selectedImageIndex] && (
+              <div className='absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 bg-background/80 text-foreground px-4 py-2 rounded-lg text-sm max-w-2xl text-center'>
+                <p className='font-medium'>
+                  {groupedAndPaginatedImages.groupedImages[selectedCategory][selectedImageIndex].filename}
+                </p>
+                <p className='text-xs text-foreground/70 mt-1'>
+                  {groupedAndPaginatedImages.formatDateCategory(selectedCategory)}
+                </p>
               </div>
             )}
           </div>
         </div>
-      </section>
+      )}
 
       {/* Customer Testimonials */}
       <section className='py-16 bg-secondary/20'>

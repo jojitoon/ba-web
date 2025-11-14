@@ -1,16 +1,40 @@
 import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
+import {
+  generateS3UploadUrl,
+  generateS3GetUrl,
+  deleteS3File,
+  generateS3Key,
+  getS3PublicUrl,
+} from './s3';
 
 export const generateUploadUrl = mutation({
-  args: {},
-  handler: async (ctx) => {
-    return await ctx.storage.generateUploadUrl();
+  args: {
+    filename: v.string(),
+    contentType: v.string(),
+    type: v.union(v.literal('image'), v.literal('video')),
+    projectId: v.optional(v.id('projects')),
+    storyId: v.optional(v.id('businessStories')),
+  },
+  handler: async (ctx, args) => {
+    const s3Key = generateS3Key(
+      args.filename,
+      args.type,
+      args.projectId,
+      args.storyId
+    );
+    const uploadUrl = await generateS3UploadUrl(s3Key, args.contentType);
+
+    return {
+      uploadUrl,
+      s3Key,
+    };
   },
 });
 
 export const saveStorageId = mutation({
   args: {
-    storageId: v.string(),
+    storageId: v.string(), // S3 key
     filename: v.string(),
     mimeType: v.string(),
     size: v.number(),
@@ -20,11 +44,30 @@ export const saveStorageId = mutation({
     muxAssetId: v.optional(v.string()),
     muxPlaybackId: v.optional(v.string()),
     uploadId: v.optional(v.string()),
+    publicUrl: v.optional(v.string()), // CloudFront/S3 public URL
+    dateCategory: v.optional(v.string()), // YYYY-MM format
+    uploadedAt: v.optional(v.number()), // Timestamp
   },
   handler: async (ctx, args) => {
+    // Generate public URL if not provided and it's an image
+    const publicUrl =
+      args.publicUrl ||
+      (args.type === 'image' ? getS3PublicUrl(args.storageId) : undefined);
+
+    // Generate dateCategory if not provided
+    let dateCategory = args.dateCategory;
+    if (!dateCategory) {
+      const date = args.uploadedAt ? new Date(args.uploadedAt) : new Date();
+      dateCategory = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, '0')}`;
+    }
+
     return await ctx.db.insert('media', {
       ...args,
-      uploadedAt: Date.now(),
+      publicUrl,
+      dateCategory,
+      uploadedAt: args.uploadedAt || Date.now(),
     });
   },
 });
@@ -60,8 +103,16 @@ export const deleteMedia = mutation({
   args: { id: v.id('media') },
   handler: async (ctx, args) => {
     const media = await ctx.db.get(args.id);
-    if (media) {
-      await ctx.storage.delete(media.storageId as any);
+    if (media && media.storageId) {
+      // Only delete from S3 if it's an image (videos use Mux)
+      if (media.type === 'image') {
+        try {
+          await deleteS3File(media.storageId);
+        } catch (error) {
+          console.error('Error deleting file from S3:', error);
+          // Continue with database deletion even if S3 deletion fails
+        }
+      }
       await ctx.db.delete(args.id);
     }
   },
@@ -90,14 +141,35 @@ export const deleteStoryVideos = mutation({
 export const getImageUrl = query({
   args: { storageId: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.storage.getUrl(args.storageId as any);
+    // First try to find media record and use stored publicUrl
+    const media = await ctx.db
+      .query('media')
+      .filter((q) => q.eq(q.field('storageId'), args.storageId))
+      .first();
+
+    if (media && media.publicUrl) {
+      return media.publicUrl;
+    }
+
+    // If no stored URL, generate one (queries are read-only, so we can't update here)
+    try {
+      return getS3PublicUrl(args.storageId);
+    } catch (error) {
+      // Fallback to presigned URL if public URL doesn't work
+      return await generateS3GetUrl(args.storageId);
+    }
   },
 });
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query('media').order('desc').collect();
+    // Use the dateCategory index for efficient sorting
+    return await ctx.db
+      .query('media')
+      .withIndex('by_dateCategory')
+      .order('desc')
+      .collect();
   },
 });
 
@@ -183,6 +255,12 @@ export const saveMuxMedia = mutation({
     storyId: v.optional(v.id('businessStories')),
   },
   handler: async (ctx, args) => {
+    // Generate dateCategory in YYYY-MM format for sorting
+    const now = new Date();
+    const dateCategory = `${now.getFullYear()}-${String(
+      now.getMonth() + 1
+    ).padStart(2, '0')}`;
+
     const mediaId = await ctx.db.insert('media', {
       filename: args.filename,
       uploadId: args.uploadId,
@@ -192,6 +270,7 @@ export const saveMuxMedia = mutation({
       type: 'video',
       mimeType: 'video/mp4',
       size: args.size ?? 0,
+      dateCategory,
       uploadedAt: Date.now(),
     });
 

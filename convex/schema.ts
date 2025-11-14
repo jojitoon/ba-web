@@ -29,7 +29,7 @@ export default defineSchema({
       })
     ),
     media: v.object({
-      photos: v.array(v.string()), // Convex storage IDs
+      photos: v.array(v.string()), // S3 keys
       videos: v.array(v.string()), // Mux asset IDs
     }),
     timelines: v.array(
@@ -43,7 +43,7 @@ export default defineSchema({
           v.literal('in-progress'),
           v.literal('pending')
         ),
-        images: v.array(v.string()), // Convex storage IDs
+        images: v.array(v.string()), // S3 keys
       })
     ),
     teamInterviews: v.array(
@@ -52,7 +52,7 @@ export default defineSchema({
         role: v.string(),
         company: v.string(),
         quote: v.string(),
-        image: v.optional(v.string()), // Convex storage ID
+        image: v.optional(v.string()), // S3 key
       })
     ),
     views: v.optional(v.number()),
@@ -115,7 +115,8 @@ export default defineSchema({
   media: defineTable({
     type: v.union(v.literal('image'), v.literal('video')),
     filename: v.string(),
-    storageId: v.string(), // Convex storage ID
+    storageId: v.string(), // S3 key
+    publicUrl: v.optional(v.string()), // CloudFront/S3 public URL
     muxAssetId: v.optional(v.string()), // For videos
     muxPlaybackId: v.optional(v.string()), // For videos
     uploadId: v.optional(v.string()), // Mux upload ID for tracking
@@ -124,8 +125,9 @@ export default defineSchema({
     mimeType: v.string(),
     projectId: v.optional(v.id('projects')),
     storyId: v.optional(v.id('businessStories')),
+    dateCategory: v.optional(v.string()), // Format: YYYY-MM for sorting/grouping
     uploadedAt: v.number(),
-  }),
+  }).index('by_dateCategory', ['dateCategory']),
 
   users: defineTable({
     name: v.string(),

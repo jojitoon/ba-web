@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Eye, Plus, X, Trash2, Video } from 'lucide-react';
@@ -43,12 +43,40 @@ export default function EditBusinessStory() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedMediaIds, setUploadedMediaIds] = useState<string[]>([]);
+  const [imagesPerCategory, setImagesPerCategory] = useState<Record<string, number>>({});
+  const INITIAL_IMAGES_PER_CATEGORY = 20; // Show 20 images per category initially
 
   const bulkUpdateMediaStoryId = useMutation(api.media.bulkUpdateMediaStoryId);
   const saveMuxMedia = useMutation(api.media.saveMuxMedia);
   const deleteMedia = useMutation(api.media.deleteMedia);
   const deleteStoryVideos = useMutation(api.media.deleteStoryVideos);
   const deleteMuxAsset = useAction(api.mux.deleteMuxAsset);
+
+  // Initialize images per category count when story loads
+  useEffect(() => {
+    if (story?.media?.images && story.media.images.length > 0 && Object.keys(imagesPerCategory).length === 0) {
+      // Group images by dateCategory to get categories
+      const groupedImages = story.media.images.reduce(
+        (acc: Record<string, typeof story.media.images>, image: any) => {
+          const dateCategory = image.dateCategory || 'Unknown';
+          if (!acc[dateCategory]) {
+            acc[dateCategory] = [];
+          }
+          acc[dateCategory].push(image);
+          return acc;
+        },
+        {}
+      );
+      const sortedCategories = Object.keys(groupedImages).sort((a, b) => b.localeCompare(a));
+      
+      const initialCounts: Record<string, number> = {};
+      sortedCategories.forEach((category) => {
+        initialCounts[category] = INITIAL_IMAGES_PER_CATEGORY;
+      });
+      setImagesPerCategory(initialCounts);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [story?._id]);
 
   // Load story data when it's available
   useEffect(() => {
@@ -218,7 +246,10 @@ export default function EditBusinessStory() {
     }
   };
 
-  const handleDeleteImage = async (imageId: string) => {
+  const handleDeleteImage = async (imageId: string, e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    
     if (!confirm('Are you sure you want to delete this image?')) {
       return;
     }
@@ -227,13 +258,17 @@ export default function EditBusinessStory() {
       await deleteMedia({ id: imageId as any });
       // Remove from uploadedMediaIds if it's there
       setUploadedMediaIds((prev) => prev.filter((id) => id !== imageId));
+      // The Convex query will automatically refetch and update the UI
     } catch (error) {
       console.error('Failed to delete image:', error);
       alert('Failed to delete image. Please try again.');
     }
   };
 
-  const handleDeleteVideo = async (videoId: string, muxAssetId?: string) => {
+  const handleDeleteVideo = async (videoId: string, muxAssetId?: string, e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    
     if (!confirm('Are you sure you want to delete this video?')) {
       return;
     }
@@ -254,6 +289,7 @@ export default function EditBusinessStory() {
       await deleteMedia({ id: videoId as any });
       // Remove from uploadedMediaIds if it's there
       setUploadedMediaIds((prev) => prev.filter((id) => id !== videoId));
+      // The Convex query will automatically refetch and update the UI
     } catch (error) {
       console.error('Failed to delete video:', error);
       alert('Failed to delete video. Please try again.');
@@ -858,36 +894,106 @@ export default function EditBusinessStory() {
                     <h4 className='text-xs font-semibold text-foreground/70 mb-4 uppercase tracking-wider'>
                       Images ({story.media.images.length})
                     </h4>
-                    <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'>
-                      {story.media.images.map((image: any) => (
-                        <div
-                          key={image._id}
-                          className='relative group bg-secondary/30 rounded-lg overflow-hidden border border-border'
-                        >
-                          <div className='aspect-square relative'>
-                            <img
-                              src={image.url}
-                              alt={image.filename}
-                              className='w-full h-full object-cover'
-                            />
-                            <div className='absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors duration-200 flex items-center justify-center'>
-                              <button
-                                onClick={() => handleDeleteImage(image._id)}
-                                className='opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90'
-                                title='Delete image'
-                              >
-                                <Trash2 className='w-4 h-4' />
-                              </button>
-                            </div>
-                          </div>
-                          <div className='p-2'>
-                            <p className='text-xs text-foreground/60 truncate'>
-                              {image.filename}
-                            </p>
-                          </div>
+                    {(() => {
+                      // Group images by dateCategory
+                      const groupedImages = story.media.images.reduce(
+                        (acc: Record<string, typeof story.media.images>, image: any) => {
+                          const dateCategory = image.dateCategory || 'Unknown';
+                          if (!acc[dateCategory]) {
+                            acc[dateCategory] = [];
+                          }
+                          acc[dateCategory].push(image);
+                          return acc;
+                        },
+                        {}
+                      );
+
+                      // Sort date categories in descending order (newest first)
+                      const sortedCategories = Object.keys(groupedImages).sort(
+                        (a, b) => b.localeCompare(a)
+                      );
+
+                      // Format date category for display (YYYY-MM -> Month Year)
+                      const formatDateCategory = (dateCategory: string) => {
+                        if (dateCategory === 'Unknown') return 'Unknown Date';
+                        const [year, month] = dateCategory.split('-');
+                        const date = new Date(parseInt(year), parseInt(month) - 1);
+                        return date.toLocaleDateString('en-US', {
+                          month: 'long',
+                          year: 'numeric',
+                        });
+                      };
+
+                      const loadMoreImages = (dateCategory: string) => {
+                        setImagesPerCategory((prev) => ({
+                          ...prev,
+                          [dateCategory]: (prev[dateCategory] || INITIAL_IMAGES_PER_CATEGORY) + 20,
+                        }));
+                      };
+
+                      return (
+                        <div className='space-y-8'>
+                          {sortedCategories.map((dateCategory) => {
+                            const images = groupedImages[dateCategory];
+                            const displayedCount = imagesPerCategory[dateCategory] || INITIAL_IMAGES_PER_CATEGORY;
+                            const displayedImages = images.slice(0, displayedCount);
+                            const hasMore = images.length > displayedCount;
+
+                            return (
+                              <div key={dateCategory}>
+                                <h5 className='text-sm font-semibold text-foreground/80 mb-4'>
+                                  {formatDateCategory(dateCategory)} ({images.length})
+                                </h5>
+                                <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'>
+                                  {displayedImages.map((image: any) => (
+                                    <div
+                                      key={image._id}
+                                      className='relative group bg-secondary/30 rounded-lg overflow-hidden border border-border'
+                                    >
+                                      <div className='aspect-square relative'>
+                                        <img
+                                          src={image.url}
+                                          alt={image.filename}
+                                          className='w-full h-full object-cover'
+                                          loading='lazy'
+                                          decoding='async'
+                                        />
+                                        <div className='absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors duration-200 flex items-center justify-center'>
+                                          <button
+                                            onClick={(e) => handleDeleteImage(image._id, e)}
+                                            className='opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90'
+                                            title='Delete image'
+                                            type='button'
+                                          >
+                                            <Trash2 className='w-4 h-4' />
+                                          </button>
+                                        </div>
+                                      </div>
+                                      <div className='p-2'>
+                                        <p className='text-xs text-foreground/60 truncate'>
+                                          {image.filename}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                                {hasMore && (
+                                  <div className='text-center mt-4'>
+                                    <button
+                                      onClick={() => loadMoreImages(dateCategory)}
+                                      className='bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors'
+                                      type='button'
+                                    >
+                                      Load More ({images.length - displayedCount} remaining)
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })()}
                   </div>
                 )}
 
@@ -917,11 +1023,12 @@ export default function EditBusinessStory() {
                             )}
                             <div className='absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors duration-200 flex items-center justify-center'>
                               <button
-                                onClick={() =>
-                                  handleDeleteVideo(video._id, video.muxAssetId)
+                                onClick={(e) =>
+                                  handleDeleteVideo(video._id, video.muxAssetId, e)
                                 }
                                 className='opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90'
                                 title='Delete video'
+                                type='button'
                               >
                                 <Trash2 className='w-4 h-4' />
                               </button>
